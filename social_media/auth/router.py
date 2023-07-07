@@ -1,4 +1,5 @@
 import bcrypt
+import uuid
 
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
@@ -7,6 +8,8 @@ from sqlalchemy.exc import NoResultFound
 from .models import User
 from .schemas import UserSignup, UserLogin
 from social_media.database import async_session_maker
+
+from .jwt import generate_token
 
 router = APIRouter(
     prefix="/auth",
@@ -42,5 +45,11 @@ async def login(user: UserLogin):
         if not user_obj or not bcrypt.checkpw(user.password.encode("utf-8"), user_obj.password.encode("utf-8")):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
+        # Generate a unique identifier for the token
+        token_id = str(uuid.uuid4())
+
+         # Generate JWT token
+        token = generate_token(user.username, token_id)
+
         # You can generate a JWT token here and return it in the response
-        return {"message": "Login successful"}
+        return {"message": "Login successful", "jwt": token}
