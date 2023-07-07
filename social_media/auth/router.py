@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+import bcrypt
+
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
@@ -21,19 +23,23 @@ async def signup(user: UserSignup):
         except NoResultFound:
             pass
 
-        # Save the user in the database (you may want to hash the password for security)
-        db_user = User(username=user.username, password=user.password)
+        # Hash the password for security
+        hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
+
+        # Save the user in the database
+        db_user = User(username=user.username, password=hashed_password.decode("utf-8"))
         session.add(db_user)
         await session.commit()
 
         return {"message": "Signup successful"}
 
-
 @router.post("/login")
 async def login(user: UserLogin):
     async with async_session_maker() as session:
-        db_user = await session.execute(selectinload(User).filter(User.username == user.username).first())
-        if not db_user or db_user.password != user.password:
+        db_user = await session.execute(select(User).where(User.username == user.username))
+        user_obj = db_user.scalar_one_or_none()
+
+        if not user_obj or not bcrypt.checkpw(user.password.encode("utf-8"), user_obj.password.encode("utf-8")):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
         # You can generate a JWT token here and return it in the response
