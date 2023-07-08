@@ -34,6 +34,9 @@ async def signup(user: UserSignup):
         session.add(db_user)
         await session.commit()
 
+        # Generate JWT token upon successful signup
+        token = JWT_sign(user.username)
+
         return {"message": "Signup successful"}
 
 @router.post("/login")
