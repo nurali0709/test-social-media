@@ -105,3 +105,62 @@ async def get_user_posts(token: str = Depends(jwt_bearer())):
 
     return user_posts
 
+@router.put("/posts/{post_id}", dependencies=[Depends(jwt_bearer())])
+async def update_post(post_id: int, updated_post: PostCreate, token: str = Depends(jwt_bearer())):
+    # Token verification has already been handled by the jwt_bearer dependency
+    # You can extract the username from the token payload and update the post
+
+    username = await verify_token(token)
+
+    async with async_session_maker() as session:
+        # Retrieve the user from the database based on the username
+        user = await session.execute(select(User).where(User.username == username))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        # Retrieve the post from the database
+        post = await session.execute(select(Post).where(Post.id == post_id).where(Post.author_id == user_obj.id))
+        existing_post = post.scalar_one_or_none()
+
+        if not existing_post:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # Update the post with the provided data
+        existing_post.title = updated_post.title
+        existing_post.description = updated_post.description
+
+        await session.commit()
+
+    return {"message": "Post updated successfully"}
+
+@router.delete("/posts/{post_id}", dependencies=[Depends(jwt_bearer())])
+async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
+    # Token verification has already been handled by the jwt_bearer dependency
+    # You can extract the username from the token payload and delete the post
+
+    username = await verify_token(token)
+
+    async with async_session_maker() as session:
+        # Retrieve the user from the database based on the username
+        user = await session.execute(select(User).where(User.username == username))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        # Retrieve the post from the database
+        post = await session.get(Post, post_id)
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # Check if the authenticated user is the author of the post
+        if post.author_id != user_obj.id:
+            raise HTTPException(status_code=403, detail="Unauthorized to delete the post")
+
+        # Delete the post
+        session.delete(post)
+        await session.commit()
+
+    return {"message": "Post deleted successfully"}
