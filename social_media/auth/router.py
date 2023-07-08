@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from .models import User, Post
+from .models import User, Post, Reaction
 from .schemas import UserSignup, UserLogin, PostCreate
 from social_media.database import async_session_maker
 
@@ -161,3 +161,57 @@ async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
         await session.delete(post)
         await session.commit()
     return {"message": "Post deleted successfully"}
+
+@router.post("/posts/{post_id}/reaction", dependencies=[Depends(jwt_bearer())])
+async def react_to_post(post_id: int, reaction: str, token: str = Depends(jwt_bearer())):
+
+    username = await verify_token(token)
+
+    async with async_session_maker() as session:
+        # Retrieve the user from the database based on the username
+        user = await session.execute(select(User).where(User.username == username))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        # Retrieve the post from the database
+        post = await session.get(Post, post_id)
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # Check if the user has already reacted to the post
+        reaction_obj = await session.execute(
+            select(Reaction).where(
+                Reaction.post_id == post.id,
+                Reaction.user_id == user_obj.id
+            )
+        )
+        existing_reaction = reaction_obj.scalar_one_or_none()
+
+        if existing_reaction:
+            # User has already reacted to the post, update the reaction
+            if existing_reaction.reaction == reaction:
+                raise HTTPException(status_code=400, detail="User has already reacted with the same reaction")
+
+            # Update the reaction and save changes
+            existing_reaction.reaction = reaction
+            await session.commit()
+        else:
+            # Check if the user is the author of the post
+            if user_obj.id == post.author_id:
+                raise HTTPException(status_code=403, detail="User cannot react to their own post")
+            
+            # User has not reacted to the post, create a new reaction
+            new_reaction = Reaction(post_id=post.id, user_id=user_obj.id, reaction=reaction)
+            session.add(new_reaction)
+            await session.commit()
+
+            # Increment the likes or dislikes count based on the reaction
+            if reaction == "like":
+                post.likes += 1
+            elif reaction == "dislike":
+                post.dislikes += 1
+            await session.commit()
+
+    return {"message": "Reaction recorded successfully"}

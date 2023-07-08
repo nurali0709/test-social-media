@@ -10,7 +10,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
+
     posts = relationship("Post", back_populates="author")
+    reactions = relationship("Reaction", back_populates="user")
 
 class Post(Base):
     __tablename__ = "posts"
@@ -21,4 +23,18 @@ class Post(Base):
     likes = Column(Integer, default=0)
     dislikes = Column(Integer, default=0)
     author_id = Column(Integer, ForeignKey("users.id"))
+
     author = relationship("User", back_populates="posts")
+    reactions = relationship("Reaction", back_populates="post")
+
+class Reaction(Base):
+    __tablename__ = "reactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id"))
+    user_id = Column(Integer, ForeignKey("users.id"))
+    reaction = Column(String)
+
+    post = relationship("Post", back_populates="reactions")
+    user = relationship("User", back_populates="reactions")
+
