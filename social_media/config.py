@@ -11,3 +11,5 @@ DB_PORT = os.environ.get("DB_PORT")
 DB_NAME = os.environ.get("DB_NAME")
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
+
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM")
