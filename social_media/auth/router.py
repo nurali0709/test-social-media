@@ -9,8 +9,6 @@ from sqlalchemy.exc import NoResultFound
 from .models import User, Post
 from .schemas import UserSignup, UserLogin, PostCreate
 from social_media.database import async_session_maker
-from jwt import PyJWTError
-from social_media.config import JWT_ALGORITHM, JWT_SECRET
 
 from .jwt.jwt_handler import JWT_sign, JWT_decode, verify_token
 from .jwt.jwt_bearer import jwt_bearer
@@ -78,3 +76,32 @@ async def create_post(post: PostCreate, token: str = Depends(jwt_bearer())):
         await session.commit()
 
     return {"message": "Post created successfully"}
+
+@router.get("/posts")
+async def get_posts():
+    async with async_session_maker() as session:
+        posts = await session.execute(select(Post))
+        all_posts = posts.scalars().all()
+    return all_posts
+
+@router.get("/my_posts", dependencies=[Depends(jwt_bearer())])
+async def get_user_posts(token: str = Depends(jwt_bearer())):
+    # Token verification has already been handled by the jwt_bearer dependency
+    # You can extract the username from the token payload and retrieve the user's own posts
+
+    username = await verify_token(token)
+
+    async with async_session_maker() as session:
+        # Retrieve the user from the database based on the username
+        user = await session.execute(select(User).where(User.username == username))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        # Retrieve the user's own posts
+        posts = await session.execute(select(Post).where(Post.author_id == user_obj.id))
+        user_posts = posts.scalars().all()
+
+    return user_posts
+
