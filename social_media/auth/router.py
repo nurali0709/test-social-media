@@ -137,8 +137,6 @@ async def update_post(post_id: int, updated_post: PostCreate, token: str = Depen
 
 @router.delete("/posts/{post_id}", dependencies=[Depends(jwt_bearer())])
 async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
-    # Token verification has already been handled by the jwt_bearer dependency
-    # You can extract the username from the token payload and delete the post
 
     username = await verify_token(token)
 
@@ -160,7 +158,6 @@ async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
             raise HTTPException(status_code=403, detail="Unauthorized to delete the post")
 
         # Delete the post
-        session.delete(post)
+        await session.delete(post)
         await session.commit()
-
     return {"message": "Post deleted successfully"}
