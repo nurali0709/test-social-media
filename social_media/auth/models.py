@@ -10,6 +10,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
+    posts = relationship("Post", back_populates="author")
 
 class Post(Base):
     __tablename__ = "posts"

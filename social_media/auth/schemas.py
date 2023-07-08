@@ -7,3 +7,7 @@ class UserSignup(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+class PostCreate(BaseModel):
+    title: str
+    description: str
