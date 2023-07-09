@@ -1,17 +1,14 @@
+'''Handling Authentication'''
 import bcrypt
-import uuid
-import jwt
 
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
-from .models import User, Post, Reaction
-from .schemas import UserSignup, UserLogin
 from social_media.database import async_session_maker
+from .models import User
+from .schemas import UserSignup, UserLogin
 
-from .jwt.jwt_handler import JWT_sign, JWT_decode, verify_token
-from .jwt.jwt_bearer import jwt_bearer
+from .jwt.jwt_handler import jwt_sign
 
 router = APIRouter(
     prefix="/auth",
@@ -20,6 +17,7 @@ router = APIRouter(
 
 @router.post("/signup")
 async def signup(user: UserSignup):
+    '''Signing up user with JWT'''
     async with async_session_maker() as session:
         try:
             db_user = await session.execute(select(User).where(User.username == user.username))
@@ -37,12 +35,13 @@ async def signup(user: UserSignup):
         await session.commit()
 
         # Generate JWT token upon successful signup
-        token = JWT_sign(user.username)
+        token = jwt_sign(user.username)
 
         return {"jwt": token}
 
 @router.post("/login")
 async def login(user: UserLogin):
+    '''Login user with JWT'''
     async with async_session_maker() as session:
         db_user = await session.execute(select(User).where(User.username == user.username))
         user_obj = db_user.scalar_one_or_none()
@@ -51,6 +50,6 @@ async def login(user: UserLogin):
             raise HTTPException(status_code=401, detail="Invalid username or password")
 
         # Generate a JWT token
-        token = JWT_sign(user.username)
+        token = jwt_sign(user.username)
 
         return {"jwt": token}

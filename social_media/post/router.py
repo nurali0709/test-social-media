@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .schemas import PostSchema
 
 from social_media.auth.models import Post, User, Reaction
-from social_media.auth.jwt.jwt_bearer import jwt_bearer
+from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
 
@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 @router.post("/create_post")
-async def create_post(post: PostSchema, token: str = Depends(jwt_bearer())):
+async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
 
     username = await verify_token(token)
 
@@ -24,7 +24,7 @@ async def create_post(post: PostSchema, token: str = Depends(jwt_bearer())):
         user = await session.execute(select(User).where(User.username == username))
         user_obj = user.scalar_one_or_none()
 
-    # Create the post with the provided data and assign the user's id as the author_id
+    # Create the post
     new_post = Post(title=post.title, description=post.description, likes=0, dislikes=0, author_id=user_obj.id)
 
     # Add the post to the session and commit the changes
@@ -41,8 +41,8 @@ async def get_posts():
         all_posts = posts.scalars().all()
     return all_posts
 
-@router.get("/my_posts", dependencies=[Depends(jwt_bearer())])
-async def get_user_posts(token: str = Depends(jwt_bearer())):
+@router.get("/my_posts", dependencies=[Depends(JwtBearer())])
+async def get_user_posts(token: str = Depends(JwtBearer())):
 
     username = await verify_token(token)
 
@@ -60,8 +60,8 @@ async def get_user_posts(token: str = Depends(jwt_bearer())):
 
     return user_posts
 
-@router.put("/posts/{post_id}", dependencies=[Depends(jwt_bearer())])
-async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(jwt_bearer())):
+@router.put("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
+async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(JwtBearer())):
 
     username = await verify_token(token)
 
@@ -88,8 +88,8 @@ async def update_post(post_id: int, updated_post: PostSchema, token: str = Depen
 
     return {"message": "Post updated successfully"}
 
-@router.delete("/posts/{post_id}", dependencies=[Depends(jwt_bearer())])
-async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
+@router.delete("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
+async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
 
     username = await verify_token(token)
 
@@ -115,8 +115,8 @@ async def delete_post(post_id: int, token: str = Depends(jwt_bearer())):
         await session.commit()
     return {"message": "Post deleted successfully"}
 
-@router.post("/posts/{post_id}/reaction", dependencies=[Depends(jwt_bearer())])
-async def react_to_post(post_id: int, reaction: str, token: str = Depends(jwt_bearer())):
+@router.post("/posts/{post_id}/reaction", dependencies=[Depends(JwtBearer())])
+async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBearer())):
 
     username = await verify_token(token)
 

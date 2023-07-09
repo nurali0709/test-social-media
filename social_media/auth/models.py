@@ -1,3 +1,4 @@
+'''Necessary SQLAlchemy modules'''
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -5,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 
 class User(Base):
+    '''User Table'''
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -15,6 +17,7 @@ class User(Base):
     reactions = relationship("Reaction", back_populates="user")
 
 class Post(Base):
+    '''Post Table'''
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -28,6 +31,7 @@ class Post(Base):
     reactions = relationship("Reaction", back_populates="post")
 
 class Reaction(Base):
+    '''Reaction Table to store likes and dislikes'''
     __tablename__ = "reactions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -37,4 +41,3 @@ class Reaction(Base):
 
     post = relationship("Post", back_populates="reactions")
     user = relationship("User", back_populates="reactions")
-
