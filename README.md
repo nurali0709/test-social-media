@@ -1,6 +1,6 @@
 # Social Media FastAPI Test Project
 
-This is a FastAPI project.
+This is a Social media FastAPI project, where you can create, read, update and delete posts and give your reactions (likes and dislikes) to another user's posts. As an authentication tool used JWT
 
 ## Getting started
 
@@ -8,6 +8,7 @@ This is a FastAPI project.
 
 - Python 3.11
 - Poetry
+- PostgreSQL
 
 ## Installation
 
@@ -27,6 +28,11 @@ This is a FastAPI project.
    ```
 ## Usage
 After poetry has been installed, you can start using application. Just write VIN you looking for in a field, and it'll respond with appropriate ones.
+Make sure to create your Database in PostgreSQL, and define them in .env file
 ```
 poetry run uvicorn vin.main:app --reload
+```
+## You can use Makefile to simplify commands
+```
+make serve
 ```
