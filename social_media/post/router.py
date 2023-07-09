@@ -1,13 +1,13 @@
+'''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
-from sqlalchemy.orm import Session
-
-from .schemas import PostSchema
 
 from social_media.auth.models import Post, User, Reaction
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
+
+from .schemas import PostSchema
 
 router = APIRouter(
     prefix="/post",
@@ -16,6 +16,7 @@ router = APIRouter(
 
 @router.post("/create_post")
 async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
+    '''Creating Post (POST)'''
 
     username = await verify_token(token)
 
@@ -36,6 +37,7 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
 
 @router.get("/posts")
 async def get_posts():
+    '''Getting all posts (GET)'''
     async with async_session_maker() as session:
         posts = await session.execute(select(Post))
         all_posts = posts.scalars().all()
@@ -43,6 +45,7 @@ async def get_posts():
 
 @router.get("/my_posts", dependencies=[Depends(JwtBearer())])
 async def get_user_posts(token: str = Depends(JwtBearer())):
+    '''Getting only users post (GET)'''
 
     username = await verify_token(token)
 
@@ -62,6 +65,7 @@ async def get_user_posts(token: str = Depends(JwtBearer())):
 
 @router.put("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
 async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(JwtBearer())):
+    '''Updating Post (PUT)'''
 
     username = await verify_token(token)
 
@@ -90,6 +94,7 @@ async def update_post(post_id: int, updated_post: PostSchema, token: str = Depen
 
 @router.delete("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
 async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
+    '''Deleting Post (DELETE)'''
 
     username = await verify_token(token)
 
@@ -117,6 +122,7 @@ async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
 
 @router.post("/posts/{post_id}/reaction", dependencies=[Depends(JwtBearer())])
 async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBearer())):
+    '''Reaction to post: like or dislike'''
 
     username = await verify_token(token)
 

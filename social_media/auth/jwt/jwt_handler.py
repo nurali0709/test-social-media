@@ -27,5 +27,5 @@ async def verify_token(token: str):
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         username = payload.get("username")
         return username
-    except PyJWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    except PyJWTError as exc:
+        raise HTTPException(status_code=401, detail="Invalid token") from exc
