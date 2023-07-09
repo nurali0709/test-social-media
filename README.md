@@ -28,7 +28,12 @@ This is a Social media FastAPI project, where you can create, read, update and d
    ```
 ## Usage
 After poetry has been installed, you can start using application. Just write VIN you looking for in a field, and it'll respond with appropriate ones.
-Make sure to create your Database in PostgreSQL, and define them in .env file
+
+## Notes
+Make sure to create your Database in PostgreSQL, and define your database name, user, port, host and password in .env file
+Additionaly, you need to generate your own JWT_SECRET in order to use JWT authentication.
+JWT algorithm is HS256
+Make sure to paste all this data in .env file
 ```
 poetry run uvicorn vin.main:app --reload
 ```
