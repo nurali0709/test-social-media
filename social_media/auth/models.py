@@ -15,6 +15,7 @@ class User(Base):
 
     posts = relationship("Post", back_populates="author")
     reactions = relationship("Reaction", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
 
 class Post(Base):
     '''Post Table'''
@@ -29,6 +30,7 @@ class Post(Base):
 
     author = relationship("User", back_populates="posts")
     reactions = relationship("Reaction", back_populates="post")
+    comments = relationship("Comment", back_populates="post")
 
 class Reaction(Base):
     '''Reaction Table to store likes and dislikes'''
@@ -41,3 +43,14 @@ class Reaction(Base):
 
     post = relationship("Post", back_populates="reactions")
     user = relationship("User", back_populates="reactions")
+
+class Comment(Base):
+    __tablename__ = 'comments'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    text = Column(String(255), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    post_id = Column(Integer, ForeignKey('posts.id'))
+
+    user = relationship("User", back_populates="comments")
+    post = relationship("Post", back_populates="comments")
