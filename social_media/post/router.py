@@ -14,6 +14,14 @@ router = APIRouter(
     tags = ["Post"]
 )
 
+@router.get("/posts")
+async def get_posts():
+    '''Getting all posts (GET)'''
+    async with async_session_maker() as session:
+        posts = await session.execute(select(Post))
+        all_posts = posts.scalars().all()
+    return all_posts
+
 @router.post("/create_post")
 async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
     '''Creating Post (POST)'''
@@ -34,14 +42,6 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
         await session.commit()
 
     return {"message": "Post created successfully"}
-
-@router.get("/posts")
-async def get_posts():
-    '''Getting all posts (GET)'''
-    async with async_session_maker() as session:
-        posts = await session.execute(select(Post))
-        all_posts = posts.scalars().all()
-    return all_posts
 
 @router.get("/my_posts", dependencies=[Depends(JwtBearer())])
 async def get_user_posts(token: str = Depends(JwtBearer())):
