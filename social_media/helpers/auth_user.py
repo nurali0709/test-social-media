@@ -1,3 +1,4 @@
+'''Retrieving authenticated user'''
 from fastapi import HTTPException
 from sqlalchemy import select
 from social_media.auth.models import User
