@@ -46,8 +46,15 @@ async def get_post_comments(post_id: int):
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
 
-        # Retrieve the comments for the post
-        comments = await session.execute(select(Comment).where(Comment.post_id == post_id))
-        post_comments = comments.scalars().all()
+        # Retrieve the comments for the post, including the associated user's username
+        comments = await session.execute(
+            select(Comment, User.username)
+            .join(User, Comment.user_id == User.id)
+            .where(Comment.post_id == post_id)
+        )
+        post_comments = [
+            {"id": comment.id, "text": comment.text, "user_id": comment.user_id, "user_username": username}
+            for comment, username in comments
+        ]
 
     return post_comments
