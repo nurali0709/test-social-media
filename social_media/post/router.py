@@ -68,15 +68,10 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
 async def get_user_posts(token: str = Depends(JwtBearer())):
     '''Getting only users post (GET)'''
 
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Retrieve the user's own posts
         posts = await session.execute(select(Post).where(Post.author_id == user_obj.id))
@@ -112,15 +107,10 @@ async def update_post(post_id: int, updated_post: PostSchema, token: str = Depen
 async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
     '''Deleting Post (DELETE)'''
 
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Retrieve the post from the database
         post = await session.get(Post, post_id)
@@ -140,15 +130,10 @@ async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
 async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBearer())):
     '''Reaction to post: like or dislike'''
 
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Retrieve the post from the database
         post = await session.get(Post, post_id)

@@ -52,16 +52,10 @@ async def create_subscription(subscription: SubscriptionSchema, token: str = Dep
 @router.get("/subscribed_posts", dependencies=[Depends(JwtBearer())])
 async def get_subscribed_posts(token: str = Depends(JwtBearer())):
     '''Retrieving all subscribed users posts'''
-    # Get the user ID from the JWT token
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Retrieve the IDs of the users that the current user is subscribed to
         subscriptions = await session.execute(

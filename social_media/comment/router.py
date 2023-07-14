@@ -4,8 +4,8 @@ from sqlalchemy import select
 
 from social_media.auth.models import User, Comment, Post
 from social_media.auth.jwt.jwt_bearer import JwtBearer
-from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
+from social_media.helpers.auth_user import get_authenticated_user
 
 from .schemas import CommentCreate
 
@@ -18,15 +18,10 @@ router = APIRouter(
 async def create_comment(post_id: int, comment: CommentCreate, token: str = Depends(JwtBearer())):
     '''Creating a Comment (POST)'''
 
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Create the comment
         new_comment = Comment(text=comment.text, user_id=user_obj.id, post_id=post_id)
