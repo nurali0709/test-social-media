@@ -8,6 +8,13 @@ class PostSchema(BaseModel):
 
 class CommentCreate(BaseModel):
     text: str
-    
+
+    class Config:
+        orm_mode = True
+
+class SubscriptionSchema(BaseModel):
+    subscriber_id: int
+    subscribed_to_id: int
+
     class Config:
         orm_mode = True

@@ -54,3 +54,13 @@ class Comment(Base):
 
     user = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
+
+class Subscription(Base):
+    __tablename__ = 'subscriptions'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    subscriber_id = Column(Integer, ForeignKey('users.id'))
+    subscribed_to_id = Column(Integer, ForeignKey('users.id'))
+
+    subscriber = relationship("User", foreign_keys=[subscriber_id])
+    subscribed_to = relationship("User", foreign_keys=[subscribed_to_id])
