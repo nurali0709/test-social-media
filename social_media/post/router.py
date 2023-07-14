@@ -7,6 +7,7 @@ from social_media.auth.models import Post, User, Reaction
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
+from social_media.helpers.auth_user import get_authenticated_user
 
 from .schemas import PostSchema
 
@@ -87,15 +88,10 @@ async def get_user_posts(token: str = Depends(JwtBearer())):
 async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(JwtBearer())):
     '''Updating Post (PUT)'''
 
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the user from the database based on the username
-        user = await session.execute(select(User).where(User.username == username))
-        user_obj = user.scalar_one_or_none()
-
-        if not user_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
 
         # Retrieve the post from the database
         post = await session.execute(select(Post).where(Post.id == post_id).where(Post.author_id == user_obj.id))

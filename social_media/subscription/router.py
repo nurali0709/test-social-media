@@ -7,6 +7,7 @@ from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.auth.models import Subscription, User, Post
 from social_media.database import async_session_maker
+from social_media.helpers.auth_user import get_authenticated_user
 
 from .schemas import SubscriptionSchema
 
@@ -18,17 +19,10 @@ router = APIRouter(
 @router.post("/subscriptions", dependencies=[Depends(JwtBearer())])
 async def create_subscription(subscription: SubscriptionSchema, token: str = Depends(JwtBearer())):
     '''Subscribing to users'''
-    # Retrieve the user ID from the JWT token
-    username = await verify_token(token)
+    # Retrieve the authenticated user
+    subscriber_obj = await get_authenticated_user(token)
 
     async with async_session_maker() as session:
-        # Retrieve the subscriber user from the database based on the username
-        subscriber = await session.execute(select(User).where(User.username == username))
-        subscriber_obj = subscriber.scalar_one_or_none()
-
-        if not subscriber_obj:
-            raise HTTPException(status_code=401, detail="User not authenticated")
-
         # Check if the subscription already exists
         existing_subscription = await session.execute(
             select(Subscription)
