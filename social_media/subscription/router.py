@@ -1,5 +1,6 @@
+'''Handling Subscription section'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, join
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from social_media.auth.jwt.jwt_bearer import JwtBearer
@@ -16,6 +17,7 @@ router = APIRouter(
 
 @router.post("/subscriptions", dependencies=[Depends(JwtBearer())])
 async def create_subscription(subscription: SubscriptionSchema, token: str = Depends(JwtBearer())):
+    '''Subscribing to users'''
     # Retrieve the user ID from the JWT token
     username = await verify_token(token)
 
@@ -55,6 +57,7 @@ async def create_subscription(subscription: SubscriptionSchema, token: str = Dep
 
 @router.get("/subscribed_posts", dependencies=[Depends(JwtBearer())])
 async def get_subscribed_posts(token: str = Depends(JwtBearer())):
+    '''Retrieving all subscribed users posts'''
     # Get the user ID from the JWT token
     username = await verify_token(token)
 
@@ -80,13 +83,14 @@ async def get_subscribed_posts(token: str = Depends(JwtBearer())):
 
     return subscribed_posts
 
-
 @router.get("/subscriptions/{user_id}", dependencies=[Depends(JwtBearer())])
-async def get_user_subscriptions(user_id: int, token: str = Depends(JwtBearer())):
-    # Retrieve the subscriptions for the given user as the subscriber
+async def get_user_subscriptions(user_id: int):
+    '''Retrieve the subscriptions for the given user as the subscriber'''
     async with async_session_maker() as session:
         subscriptions = await session.execute(
-            select(Subscription, User).join(User, User.id == Subscription.subscribed_to_id).where(Subscription.subscriber_id == user_id)
+            select(Subscription, User)
+            .join(User, User.id == Subscription.subscribed_to_id)
+            .where(Subscription.subscriber_id == user_id)
         )
         user_subscriptions = [{
             "id": subscription.id,
@@ -98,11 +102,13 @@ async def get_user_subscriptions(user_id: int, token: str = Depends(JwtBearer())
     return user_subscriptions
 
 @router.get("/subscribers/{user_id}", dependencies=[Depends(JwtBearer())])
-async def get_subscribers(user_id: int, token: str = Depends(JwtBearer())):
-    # Retrieve the subscribers of the given user
+async def get_subscribers(user_id: int):
+    '''Retrieve the subscribers of the given user'''
     async with async_session_maker() as session:
         subscriptions = await session.execute(
-            select(Subscription, User).join(User, User.id == Subscription.subscriber_id).where(Subscription.subscribed_to_id == user_id)
+            select(Subscription, User)
+            .join(User, User.id == Subscription.subscriber_id)
+            .where(Subscription.subscribed_to_id == user_id)
         )
         subscribers = [{
             "id": subscription.id,
@@ -115,6 +121,7 @@ async def get_subscribers(user_id: int, token: str = Depends(JwtBearer())):
 
 @router.delete("/subscriptions/{subscription_id}", dependencies=[Depends(JwtBearer())])
 async def delete_subscription(subscription_id: int, token: str = Depends(JwtBearer())):
+    '''Deleting subscription'''
     # Retrieve the user ID from the JWT token
     username = await verify_token(token)
 

@@ -1,9 +1,9 @@
 '''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, join
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
-from social_media.auth.models import Post, User, Reaction, Comment, Subscription
+from social_media.auth.models import Post, User, Reaction
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
@@ -14,8 +14,6 @@ router = APIRouter(
     prefix="/post",
     tags = ["Post"]
 )
-
-from sqlalchemy.orm import joinedload
 
 @router.get("/posts")
 async def get_posts():

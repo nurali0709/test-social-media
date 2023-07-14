@@ -1,3 +1,4 @@
+'''Handling Comment Section'''
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy import select
 

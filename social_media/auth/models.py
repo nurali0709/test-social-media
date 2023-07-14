@@ -45,6 +45,7 @@ class Reaction(Base):
     user = relationship("User", back_populates="reactions")
 
 class Comment(Base):
+    '''Comment table to store them'''
     __tablename__ = 'comments'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -56,6 +57,7 @@ class Comment(Base):
     post = relationship("Post", back_populates="comments")
 
 class Subscription(Base):
+    '''Table to store all subscriptions'''
     __tablename__ = 'subscriptions'
 
     id = Column(Integer, primary_key=True, autoincrement=True)

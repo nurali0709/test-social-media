@@ -5,4 +5,3 @@ class PostSchema(BaseModel):
     '''Schema for posting'''
     title: str
     description: str
-
