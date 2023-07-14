@@ -1,6 +1,7 @@
 '''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, join
+from sqlalchemy.orm import joinedload
 
 from social_media.auth.models import Post, User, Reaction, Comment, Subscription
 from social_media.auth.jwt.jwt_bearer import JwtBearer
@@ -14,13 +15,34 @@ router = APIRouter(
     tags = ["Post"]
 )
 
+from sqlalchemy.orm import joinedload
+
 @router.get("/posts")
 async def get_posts():
     '''Getting all posts (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(select(Post))
+        posts = await session.execute(
+            select(Post).join(User).options(joinedload(Post.author))
+        )
         all_posts = posts.scalars().all()
-    return all_posts
+
+    # Extract the required data and include the author's username
+    formatted_posts = []
+    for post in all_posts:
+        author_username = post.author.username if post.author else None
+        formatted_posts.append({
+            "id": post.id,
+            "title": post.title,
+            "description": post.description,
+            "likes": post.likes,
+            "dislikes": post.dislikes,
+            "author_id": post.author_id,
+            "author_username": author_username
+        })
+
+    return formatted_posts
+
+
 
 @router.post("/create_post")
 async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):

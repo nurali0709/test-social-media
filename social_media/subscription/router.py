@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, join
+from sqlalchemy.orm import joinedload
 
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
@@ -14,23 +15,43 @@ router = APIRouter(
 )
 
 @router.post("/subscriptions", dependencies=[Depends(JwtBearer())])
-async def create_subscription(user_id: int, subscription: SubscriptionSchema, token: str = Depends(JwtBearer())):
-    # Validate subscriber_id and subscribed_to_id
-    if user_id == subscription.subscribed_to_id:
-        raise HTTPException(status_code=400, detail="User cannot subscribe to themselves")
+async def create_subscription(subscription: SubscriptionSchema, token: str = Depends(JwtBearer())):
+    # Retrieve the user ID from the JWT token
+    username = await verify_token(token)
 
-    # Create a new subscription
-    new_subscription = Subscription(
-        subscriber_id=user_id,
-        subscribed_to_id=subscription.subscribed_to_id
-    )
-
-    # Save the subscription to the database
     async with async_session_maker() as session:
+        # Retrieve the subscriber user from the database based on the username
+        subscriber = await session.execute(select(User).where(User.username == username))
+        subscriber_obj = subscriber.scalar_one_or_none()
+
+        if not subscriber_obj:
+            raise HTTPException(status_code=401, detail="User not authenticated")
+
+        # Check if the subscription already exists
+        existing_subscription = await session.execute(
+            select(Subscription)
+            .where(Subscription.subscriber_id == subscriber_obj.id)
+            .where(Subscription.subscribed_to_id == subscription.subscribed_to_id)
+        )
+        if existing_subscription.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="Subscription already exists")
+
+        # Check if the subscriber is trying to subscribe themselves
+        if subscriber_obj.id == subscription.subscribed_to_id:
+            raise HTTPException(status_code=400, detail="Cannot subscribe to yourself")
+
+        # Create a new subscription
+        new_subscription = Subscription(
+            subscriber_id=subscriber_obj.id,
+            subscribed_to_id=subscription.subscribed_to_id
+        )
+
+        # Save the subscription to the database
         session.add(new_subscription)
         await session.commit()
 
     return {"message": "Subscription created successfully"}
+
 
 @router.get("/subscribed_posts", dependencies=[Depends(JwtBearer())])
 async def get_subscribed_posts(token: str = Depends(JwtBearer())):
@@ -94,14 +115,28 @@ async def get_subscribers(user_id: int, token: str = Depends(JwtBearer())):
 
 @router.delete("/subscriptions/{subscription_id}", dependencies=[Depends(JwtBearer())])
 async def delete_subscription(subscription_id: int, token: str = Depends(JwtBearer())):
-    # Retrieve the subscription
+    # Retrieve the user ID from the JWT token
+    username = await verify_token(token)
+
     async with async_session_maker() as session:
-        subscription = await session.get(Subscription, subscription_id)
-        if not subscription:
+        # Retrieve the subscription with eager loading of the subscriber relationship
+        subscription = await session.execute(
+            select(Subscription).where(Subscription.id == subscription_id).options(joinedload(Subscription.subscriber))
+        )
+        existing_subscription = subscription.scalar_one_or_none()
+
+        if not existing_subscription:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
+        # Retrieve the subscriber's username
+        subscriber_username = existing_subscription.subscriber.username
+
+        # Check if the authenticated user is the owner of the subscription
+        if subscriber_username != username:
+            raise HTTPException(status_code=403, detail="Unauthorized to delete the subscription")
+
         # Delete the subscription
-        await session.delete(subscription)
+        await session.delete(existing_subscription)
         await session.commit()
 
     return {"message": "Subscription deleted successfully"}
