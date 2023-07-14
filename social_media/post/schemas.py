@@ -6,8 +6,3 @@ class PostSchema(BaseModel):
     title: str
     description: str
 
-class SubscriptionSchema(BaseModel):
-    subscribed_to_id: int
-
-    class Config:
-        orm_mode = True
