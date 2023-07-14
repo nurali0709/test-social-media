@@ -6,12 +6,6 @@ class PostSchema(BaseModel):
     title: str
     description: str
 
-class CommentCreate(BaseModel):
-    text: str
-
-    class Config:
-        orm_mode = True
-
 class SubscriptionSchema(BaseModel):
     subscribed_to_id: int
 
