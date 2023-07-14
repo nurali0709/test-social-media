@@ -13,7 +13,6 @@ class CommentCreate(BaseModel):
         orm_mode = True
 
 class SubscriptionSchema(BaseModel):
-    subscriber_id: int
     subscribed_to_id: int
 
     class Config:
