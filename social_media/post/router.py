@@ -208,4 +208,3 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
             })
 
         return formatted_posts
-
