@@ -175,3 +175,37 @@ async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBea
             await session.commit()
 
     return {"message": "Reaction recorded successfully"}
+
+@router.get("/liked_posts", dependencies=[Depends(JwtBearer())])
+async def get_liked_posts(token: str = Depends(JwtBearer())):
+    '''Getting all posts liked by the user (GET)'''
+
+    # Retrieve the authenticated user
+    user_obj = await get_authenticated_user(token)
+
+    async with async_session_maker() as session:
+        # Retrieve the posts liked by the user
+        liked_posts = await session.execute(
+            select(Post)
+            .join(Reaction)
+            .join(User, User.id == Post.author_id)
+            .where(Reaction.user_id == user_obj.id, Reaction.reaction == "like")
+            .options(joinedload(Post.author))
+        )
+        user_liked_posts = liked_posts.scalars().all()
+
+        # Extract the required data and include the author's username
+        formatted_posts = []
+        for post in user_liked_posts:
+            formatted_posts.append({
+                "id": post.id,
+                "title": post.title,
+                "description": post.description,
+                "likes": post.likes,
+                "dislikes": post.dislikes,
+                "author_id": post.author_id,
+                "author_username": post.author.username if post.author else None
+            })
+
+        return formatted_posts
+
