@@ -59,3 +59,23 @@ async def login(user: UserLogin):
         token = jwt_sign(user.username)
 
         return {"jwt": token}
+
+@router.get("/users/")
+async def get_all_users():
+    '''Get all users (GET)'''
+    async with async_session_maker() as session:
+        users = await session.execute(select(User))
+        all_users = users.scalars().all()
+
+    # Extract the required data
+    formatted_users = []
+    for user in all_users:
+        formatted_users.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "name": user.name,
+            "surname": user.surname
+        })
+
+    return formatted_users
