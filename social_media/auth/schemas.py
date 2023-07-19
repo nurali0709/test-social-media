@@ -4,6 +4,9 @@ from pydantic import BaseModel
 class UserSignup(BaseModel):
     '''Schema for signing up user'''
     username: str
+    email: str
+    name: str
+    surname: str
     password: str
 
 class UserLogin(BaseModel):

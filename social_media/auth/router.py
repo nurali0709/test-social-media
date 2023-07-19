@@ -23,6 +23,11 @@ async def signup(user: UserSignup):
             db_user = await session.execute(select(User).where(User.username == user.username))
             if db_user.scalar_one_or_none():
                 raise HTTPException(status_code=400, detail="Username already exists")
+
+            db_email = await session.execute(select(User).where(User.email == user.email))
+            if db_email.scalar_one_or_none():
+                raise HTTPException(status_code=400, detail="Email already exists")
+
         except NoResultFound:
             pass
 
@@ -30,7 +35,8 @@ async def signup(user: UserSignup):
         hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
 
         # Save the user in the database
-        db_user = User(username=user.username, password=hashed_password.decode("utf-8"))
+        db_user = User(username=user.username, password=hashed_password.decode("utf-8"),
+                       email=user.email, name=user.name, surname=user.surname)
         session.add(db_user)
         await session.commit()
 
