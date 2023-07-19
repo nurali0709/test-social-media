@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
+from datetime import datetime
 
 from social_media.auth.models import Post, User, Reaction
 from social_media.auth.jwt.jwt_bearer import JwtBearer
@@ -29,6 +30,10 @@ async def get_posts():
     formatted_posts = []
     for post in all_posts:
         author_username = post.author.username if post.author else None
+        # Handle the case when created_at is None
+        created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+        updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+
         formatted_posts.append({
             "id": post.id,
             "title": post.title,
@@ -36,7 +41,9 @@ async def get_posts():
             "likes": post.likes,
             "dislikes": post.dislikes,
             "author_id": post.author_id,
-            "author_username": author_username
+            "author_username": author_username,
+            "created_at": created_at,
+            "updated_at": updated_at,
         })
 
     return formatted_posts
@@ -197,6 +204,11 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
         # Extract the required data and include the author's username
         formatted_posts = []
         for post in user_liked_posts:
+            author_username = post.author.username if post.author else None
+
+            created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+            updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+
             formatted_posts.append({
                 "id": post.id,
                 "title": post.title,
@@ -204,7 +216,9 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
                 "likes": post.likes,
                 "dislikes": post.dislikes,
                 "author_id": post.author_id,
-                "author_username": post.author.username if post.author else None
+                "author_username": author_username,
+                "created_at": created_at,
+                "updated_at": updated_at,
             })
 
         return formatted_posts

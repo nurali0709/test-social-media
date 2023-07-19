@@ -1,7 +1,8 @@
 '''Necessary SQLAlchemy modules'''
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -26,6 +27,8 @@ class Post(Base):
     description = Column(String)
     likes = Column(Integer, default=0)
     dislikes = Column(Integer, default=0)
+    created_at = Column(Date, default=datetime.utcnow)
+    updated_at = Column(Date, default=datetime.utcnow, onupdate=datetime.utcnow)
     author_id = Column(Integer, ForeignKey("users.id"))
 
     author = relationship("User", back_populates="posts")
