@@ -39,6 +39,7 @@ async def get_posts():
             "description": post.description,
             "likes": post.likes,
             "dislikes": post.dislikes,
+            "views": post.views,
             "author_id": post.author_id,
             "author_username": author_username,
             "created_at": created_at,
@@ -214,6 +215,7 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
                 "description": post.description,
                 "likes": post.likes,
                 "dislikes": post.dislikes,
+                "views": post.views,
                 "author_id": post.author_id,
                 "author_username": author_username,
                 "created_at": created_at,
@@ -267,6 +269,7 @@ async def search(q: str):
                 "description": post.description,
                 "likes": post.likes,
                 "dislikes": post.dislikes,
+                "views": post.views,
                 "author_id": post.author_id,
                 "author_username": author_username,
                 "author_name": author_name,
@@ -276,3 +279,20 @@ async def search(q: str):
             })
 
     return formatted_posts
+
+@router.get("/posts/{post_id}/view")
+async def view_post(post_id: int):
+    '''Increment the view count of a post (GET)'''
+
+    async with async_session_maker() as session:
+        # Retrieve the post from the database
+        post = await session.get(Post, post_id)
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # Increment the view count
+        post.views += 1
+        await session.commit()
+
+        # Return the updated view count
+        return {"message": "Post view counted successfully", "views": post.views}
