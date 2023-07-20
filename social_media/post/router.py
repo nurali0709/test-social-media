@@ -1,7 +1,7 @@
 '''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy import select, or_
+from sqlalchemy.orm import joinedload, aliased
 
 from social_media.auth.models import Post, User, Reaction
 from social_media.auth.jwt.jwt_bearer import JwtBearer
@@ -221,3 +221,58 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
             })
 
         return formatted_posts
+
+@router.get("/search")
+async def search(q: str):
+    '''Search posts by title or username (GET)'''
+
+    async with async_session_maker() as session:
+        user_alias = aliased(User)
+
+        # Search for posts with the keyword in their title
+        posts_by_title = await session.execute(
+            select(Post)
+            .join(user_alias, user_alias.id == Post.author_id)
+            .where(Post.title.ilike(f"%{q}%"))
+            .options(joinedload(Post.author))
+        )
+
+        # Search for posts with the keyword in the User's name, surname, or username
+        posts_by_user = await session.execute(
+            select(Post)
+            .outerjoin(user_alias, user_alias.id == Post.author_id)
+            .where(
+                or_(
+                    user_alias.name.ilike(f"%{q}%"),
+                    user_alias.surname.ilike(f"%{q}%"),
+                    user_alias.username.ilike(f"%{q}%")
+                )
+            )
+            .options(joinedload(Post.author))
+        )
+
+        # Extract the required data for posts
+        formatted_posts = []
+        for post in posts_by_title.scalars().all() + posts_by_user.scalars().all():
+            author_username = post.author.username if post.author else None
+            author_name = post.author.name if post.author else None
+            author_surname = post.author.surname if post.author else None
+
+            created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+            updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+
+            formatted_posts.append({
+                "id": post.id,
+                "title": post.title,
+                "description": post.description,
+                "likes": post.likes,
+                "dislikes": post.dislikes,
+                "author_id": post.author_id,
+                "author_username": author_username,
+                "author_name": author_name,
+                "author_surname": author_surname,
+                "created_at": created_at,
+                "updated_at": updated_at,
+            })
+
+    return formatted_posts
