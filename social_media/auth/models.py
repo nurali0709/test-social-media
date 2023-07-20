@@ -16,6 +16,7 @@ class User(Base):
     name = Column(String)
     surname = Column(String)
     password = Column(String)
+    verification_code = Column(String, nullable=True)
 
     posts = relationship("Post", back_populates="author")
     reactions = relationship("Reaction", back_populates="user")
