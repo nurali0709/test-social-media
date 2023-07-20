@@ -1,3 +1,4 @@
+'''Handling Celery worker task'''
 import bcrypt
 
 from fastapi import APIRouter, HTTPException

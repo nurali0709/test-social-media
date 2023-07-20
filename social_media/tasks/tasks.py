@@ -1,8 +1,8 @@
+'''Sending verification email'''
 import smtplib
 import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.application import MIMEApplication
 from celery import Celery
 from social_media.config import SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, SMTP_USER
 
@@ -11,7 +11,7 @@ celery = Celery('tasks', broker="redis://localhost:6379")
 
 @celery.task
 def send_verification_code(email, verification_code):
-
+    '''Sending email using SMTP library and celery'''
     # Create the email message
     msg = MIMEMultipart()
     msg['From'] = SMTP_USER
@@ -37,7 +37,9 @@ def send_verification_code(email, verification_code):
         server.login(SMTP_USER, SMTP_PASSWORD)
         server.sendmail(SMTP_USER, email, msg.as_string())
         server.quit()
-        
+
         print("Verification code email sent successfully!")
-    except Exception as e:
-        print(f"Failed to send verification code email: {str(e)}")
+    except smtplib.SMTPException as smtp_ex:
+        print(f"Failed to send verification code email: {str(smtp_ex)}")
+    except Exception as ex:
+        print(f"An error occurred while sending verification code email: {str(ex)}")
