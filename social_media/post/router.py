@@ -8,7 +8,7 @@ from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
 from social_media.helpers.auth_user import get_authenticated_user
-
+from social_media.helpers.recommends import get_random_recommendations
 from .schemas import PostSchema
 
 router = APIRouter(
@@ -285,14 +285,44 @@ async def view_post(post_id: int):
     '''Increment the view count of a post (GET)'''
 
     async with async_session_maker() as session:
-        # Retrieve the post from the database
-        post = await session.get(Post, post_id)
-        if not post:
+
+        post_with_author = (
+            await session.execute(
+                select(Post, User)
+                .join(User, User.id == Post.author_id)
+                .where(Post.id == post_id)
+            )
+        ).first()
+
+        if not post_with_author:
             raise HTTPException(status_code=404, detail="Post not found")
+
+        post, author = post_with_author
 
         # Increment the view count
         post.views += 1
         await session.commit()
 
-        # Return the updated view count
-        return {"message": "Post view counted successfully", "views": post.views}
+        # Return the updated view count and the three random recommended posts
+        recommendations = await get_random_recommendations(session, post_id)
+        created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+        updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+        return {
+            "post": {
+                "id": post.id,
+                "title": post.title,
+                "description": post.description,
+                "likes": post.likes,
+                "dislikes": post.dislikes,
+                "views": post.views,
+                "author": {
+                    "id": author.id,
+                    "username": author.username,
+                    "name": author.name,
+                    "surname": author.surname,
+                },
+                "created_at": created_at,
+                "updated_at": updated_at,
+            },
+            "recommendations": recommendations
+        }
