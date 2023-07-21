@@ -35,8 +35,14 @@ async def signup(user: UserSignup):
         hashed_password = bcrypt.hashpw(user.password.encode("utf-8"), bcrypt.gensalt())
 
         # Save the user in the database
-        db_user = User(username=user.username, password=hashed_password.decode("utf-8"),
-                       email=user.email, name=user.name, surname=user.surname)
+        db_user = User(
+            username=user.username,
+            password=hashed_password.decode("utf-8"),
+            email=user.email,
+            name=user.name,
+            surname=user.surname
+            )
+
         session.add(db_user)
         await session.commit()
 
