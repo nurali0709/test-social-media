@@ -21,6 +21,7 @@ class User(Base):
     posts = relationship("Post", back_populates="author")
     reactions = relationship("Reaction", back_populates="user")
     comments = relationship("Comment", back_populates="user")
+    comment_responses = relationship("CommentResponse", back_populates="user")
 
 class Post(Base):
     '''Post Table'''
@@ -63,6 +64,19 @@ class Comment(Base):
 
     user = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
+    responses = relationship("CommentResponse", back_populates="comment")
+
+class CommentResponse(Base):
+    '''Comment Response model'''
+    __tablename__ = "comment_responses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    comment_id = Column(Integer, ForeignKey("comments.id"), nullable=False)
+
+    user = relationship("User", back_populates="comment_responses")
+    comment = relationship("Comment", back_populates="responses")
 
 class Subscription(Base):
     '''Table to store all subscriptions'''
