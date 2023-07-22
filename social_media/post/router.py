@@ -29,6 +29,8 @@ async def get_posts():
     formatted_posts = []
     for post in all_posts:
         author_username = post.author.username if post.author else None
+        author_name = post.author.name if post.author else None
+        author_surname = post.author.surname if post.author else None
         # Handle the case when created_at is None
         created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
         updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
@@ -42,6 +44,8 @@ async def get_posts():
             "views": post.views,
             "author_id": post.author_id,
             "author_username": author_username,
+            "author_name": author_name,
+            "author_surname": author_surname,
             "created_at": created_at,
             "updated_at": updated_at,
         })
