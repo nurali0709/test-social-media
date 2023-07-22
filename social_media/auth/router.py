@@ -1,14 +1,16 @@
 '''Handling Authentication'''
 import bcrypt
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from social_media.database import async_session_maker
 from .models import User
-from .schemas import UserSignup, UserLogin
+from .schemas import UserSignup, UserLogin, UserUpdate
+from social_media.helpers.auth_user import get_authenticated_user
 
 from .jwt.jwt_handler import jwt_sign
+from .jwt.jwt_bearer import JwtBearer
 
 router = APIRouter(
     prefix="/auth",
@@ -65,6 +67,41 @@ async def login(user: UserLogin):
         token = jwt_sign(user.username)
 
         return {"jwt": token}
+
+
+@router.put("/users/{user_id}/update")
+async def update_user(user_id: int, user_update: UserUpdate, token: str = Depends(JwtBearer())):
+    '''Update user data (PUT)'''
+
+    # Retrieve the authenticated user
+    authenticated_user = await get_authenticated_user(token)
+
+    # Ensure that the user can only update their own data
+    if authenticated_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden - You can only update your own data")
+
+    async with async_session_maker() as session:
+        # Retrieve the user from the database
+        user = await session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Update the user data with the new values
+        user.username = user_update.username
+        user.email = user_update.email
+        user.name = user_update.name
+        user.surname = user_update.surname
+
+        # Commit the changes to the database
+        await session.commit()
+
+    return UserUpdate(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        name=user.name,
+        surname=user.surname
+    )
 
 @router.get("/users/")
 async def get_all_users():

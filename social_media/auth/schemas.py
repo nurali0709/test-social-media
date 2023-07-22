@@ -13,3 +13,10 @@ class UserLogin(BaseModel):
     '''Schema for logging user in'''
     username: str
     password: str
+
+class UserUpdate(BaseModel):
+    '''Model for updating user data'''
+    username: str
+    email: str
+    name: str
+    surname: str
