@@ -234,6 +234,7 @@ async def search(q: str):
 
     async with async_session_maker() as session:
         user_alias = aliased(User)
+        unique_posts = set()
 
         # Search for posts with the keyword in their title
         posts_by_title = await session.execute(
@@ -260,29 +261,32 @@ async def search(q: str):
         # Extract the required data for posts
         formatted_posts = []
         for post in posts_by_title.scalars().all() + posts_by_user.scalars().all():
-            author_username = post.author.username if post.author else None
-            author_name = post.author.name if post.author else None
-            author_surname = post.author.surname if post.author else None
+            if post.id not in unique_posts:
+                unique_posts.add(post.id)
+                
+                author_username = post.author.username if post.author else None
+                author_name = post.author.name if post.author else None
+                author_surname = post.author.surname if post.author else None
 
-            created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
-            updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+                created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+                updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
 
-            formatted_posts.append({
-                "id": post.id,
-                "title": post.title,
-                "description": post.description,
-                "likes": post.likes,
-                "dislikes": post.dislikes,
-                "views": post.views,
-                "author_id": post.author_id,
-                "author_username": author_username,
-                "author_name": author_name,
-                "author_surname": author_surname,
-                "created_at": created_at,
-                "updated_at": updated_at,
-            })
+                formatted_posts.append({
+                    "id": post.id,
+                    "title": post.title,
+                    "description": post.description,
+                    "likes": post.likes,
+                    "dislikes": post.dislikes,
+                    "views": post.views,
+                    "author_id": post.author_id,
+                    "author_username": author_username,
+                    "author_name": author_name,
+                    "author_surname": author_surname,
+                    "created_at": created_at,
+                    "updated_at": updated_at,
+                })
 
-    return formatted_posts
+        return formatted_posts
 
 @router.get("/posts/{post_id}/view")
 async def view_post(post_id: int):
