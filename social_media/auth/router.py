@@ -5,9 +5,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from social_media.database import async_session_maker
+from social_media.helpers.auth_user import get_authenticated_user
 from .models import User
 from .schemas import UserSignup, UserLogin, UserUpdate
-from social_media.helpers.auth_user import get_authenticated_user
 
 from .jwt.jwt_handler import jwt_sign
 from .jwt.jwt_bearer import JwtBearer

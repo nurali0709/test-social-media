@@ -1,11 +1,12 @@
-from sqlalchemy.ext.asyncio import AsyncSession
+'''Recommendation maker helper'''
 from typing import List
+import random
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from social_media.auth.models import Post, User
-import random
 
 async def get_random_recommendations(session: AsyncSession, post_id: int) -> List[Post]:
-
+    '''Handling generating recommendation posts'''
     result = (
         await session.execute(
             select(Post, User)
