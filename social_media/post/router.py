@@ -1,9 +1,9 @@
 '''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import joinedload, aliased
 
-from social_media.auth.models import Post, User, Reaction
+from social_media.auth.models import Post, User, Reaction, Comment, CommentResponse
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
@@ -28,6 +28,24 @@ async def get_posts():
     # Extract the required data and include the author's username
     formatted_posts = []
     for post in all_posts:
+        # Count the number of comments for the post
+        num_comments = await session.execute(
+            select(func.count(Comment.id))
+            .where(Comment.post_id == post.id)
+        )
+        num_comments = num_comments.scalar()
+
+        # Count the number of comment responses for the post
+        num_comment_responses = await session.execute(
+            select(func.count(CommentResponse.id))
+            .join(Comment, Comment.id == CommentResponse.comment_id)
+            .where(Comment.post_id == post.id)
+        )
+        num_comment_responses = num_comment_responses.scalar()
+
+        # Calculate the total number of comments and comment responses
+        comments = num_comments + num_comment_responses
+
         author_username = post.author.username if post.author else None
         author_name = post.author.name if post.author else None
         author_surname = post.author.surname if post.author else None
@@ -42,6 +60,7 @@ async def get_posts():
             "likes": post.likes,
             "dislikes": post.dislikes,
             "views": post.views,
+            "comments": comments,
             "author_id": post.author_id,
             "author_username": author_username,
             "author_name": author_name,
@@ -51,8 +70,6 @@ async def get_posts():
         })
 
     return formatted_posts
-
-
 
 @router.post("/create_post")
 async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
@@ -263,7 +280,7 @@ async def search(q: str):
         for post in posts_by_title.scalars().all() + posts_by_user.scalars().all():
             if post.id not in unique_posts:
                 unique_posts.add(post.id)
-                
+
                 author_username = post.author.username if post.author else None
                 author_name = post.author.name if post.author else None
                 author_surname = post.author.surname if post.author else None
@@ -311,6 +328,24 @@ async def view_post(post_id: int):
         post.views += 1
         await session.commit()
 
+        # Count the number of comments for the post
+        num_comments = await session.execute(
+            select(func.count(Comment.id))
+            .where(Comment.post_id == post_id)
+        )
+        num_comments = num_comments.scalar()
+
+        # Count the number of comment responses for the post
+        num_comment_responses = await session.execute(
+            select(func.count(CommentResponse.id))
+            .join(Comment, Comment.id == CommentResponse.comment_id)
+            .where(Comment.post_id == post_id)
+        )
+        num_comment_responses = num_comment_responses.scalar()
+
+        # Calculate the total number of comments and comment responses
+        total_num_comments = num_comments + num_comment_responses
+
         # Return the updated view count and the three random recommended posts
         recommendations = await get_random_recommendations(session, post_id)
         created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
@@ -323,6 +358,7 @@ async def view_post(post_id: int):
                 "likes": post.likes,
                 "dislikes": post.dislikes,
                 "views": post.views,
+                "total_num_comments": total_num_comments,
                 "author": {
                     "id": author.id,
                     "username": author.username,
