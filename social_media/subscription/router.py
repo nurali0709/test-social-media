@@ -11,10 +11,8 @@ from social_media.helpers.auth_user import get_authenticated_user
 
 from .schemas import SubscriptionSchema
 
-router = APIRouter(
-    prefix="/subscription",
-    tags = ["Subscription"]
-)
+router = APIRouter(prefix="/subscription", tags=["Subscription"])
+
 
 @router.post("/subscriptions", dependencies=[Depends(JwtBearer())])
 async def create_subscription(subscription: SubscriptionSchema, token: str = Depends(JwtBearer())):
@@ -25,9 +23,8 @@ async def create_subscription(subscription: SubscriptionSchema, token: str = Dep
     async with async_session_maker() as session:
         # Check if the subscription already exists
         existing_subscription = await session.execute(
-            select(Subscription)
-            .where(Subscription.subscriber_id == subscriber_obj.id)
-            .where(Subscription.subscribed_to_id == subscription.subscribed_to_id)
+            select(Subscription).where(Subscription.subscriber_id == subscriber_obj.id
+                                       ).where(Subscription.subscribed_to_id == subscription.subscribed_to_id)
         )
         if existing_subscription.scalar_one_or_none():
             raise HTTPException(status_code=400, detail="Subscription already exists")
@@ -38,8 +35,7 @@ async def create_subscription(subscription: SubscriptionSchema, token: str = Dep
 
         # Create a new subscription
         new_subscription = Subscription(
-            subscriber_id=subscriber_obj.id,
-            subscribed_to_id=subscription.subscribed_to_id
+            subscriber_id=subscriber_obj.id, subscribed_to_id=subscription.subscribed_to_id
         )
 
         # Save the subscription to the database
@@ -64,21 +60,20 @@ async def get_subscribed_posts(token: str = Depends(JwtBearer())):
         subscribed_user_ids = [sub[0] for sub in subscriptions]
 
         # Retrieve the posts from the subscribed users
-        posts = await session.execute(
-            select(Post).where(Post.author_id.in_(subscribed_user_ids))
-        )
+        posts = await session.execute(select(Post).where(Post.author_id.in_(subscribed_user_ids)))
         subscribed_posts = posts.scalars().all()
 
     return subscribed_posts
+
 
 @router.get("/subscriptions/{user_id}", dependencies=[Depends(JwtBearer())])
 async def get_user_subscriptions(user_id: int):
     '''Retrieve the subscriptions for the given user as the subscriber'''
     async with async_session_maker() as session:
         subscriptions = await session.execute(
-            select(Subscription, User)
-            .join(User, User.id == Subscription.subscribed_to_id)
-            .where(Subscription.subscriber_id == user_id)
+            select(Subscription,
+                   User).join(User,
+                              User.id == Subscription.subscribed_to_id).where(Subscription.subscriber_id == user_id)
         )
         user_subscriptions = [{
             "id": subscription.id,
@@ -89,14 +84,15 @@ async def get_user_subscriptions(user_id: int):
 
     return user_subscriptions
 
+
 @router.get("/subscribers/{user_id}", dependencies=[Depends(JwtBearer())])
 async def get_subscribers(user_id: int):
     '''Retrieve the subscribers of the given user'''
     async with async_session_maker() as session:
         subscriptions = await session.execute(
-            select(Subscription, User)
-            .join(User, User.id == Subscription.subscriber_id)
-            .where(Subscription.subscribed_to_id == user_id)
+            select(Subscription,
+                   User).join(User,
+                              User.id == Subscription.subscriber_id).where(Subscription.subscribed_to_id == user_id)
         )
         subscribers = [{
             "id": subscription.id,
@@ -107,6 +103,7 @@ async def get_subscribers(user_id: int):
 
     return subscribers
 
+
 @router.delete("/subscriptions/{subscription_id}", dependencies=[Depends(JwtBearer())])
 async def delete_subscription(subscription_id: int, token: str = Depends(JwtBearer())):
     '''Deleting subscription'''
@@ -116,7 +113,8 @@ async def delete_subscription(subscription_id: int, token: str = Depends(JwtBear
     async with async_session_maker() as session:
         # Retrieve the subscription with eager loading of the subscriber relationship
         subscription = await session.execute(
-            select(Subscription).where(Subscription.id == subscription_id).options(joinedload(Subscription.subscriber))
+            select(Subscription).where(Subscription.id == subscription_id
+                                       ).options(joinedload(Subscription.subscriber))
         )
         existing_subscription = subscription.scalar_one_or_none()
 

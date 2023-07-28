@@ -1,6 +1,7 @@
 '''Pydantic Base Model'''
 from pydantic import BaseModel
 
+
 class SubscriptionSchema(BaseModel):
     '''Validation for subscription'''
     subscribed_to_id: int

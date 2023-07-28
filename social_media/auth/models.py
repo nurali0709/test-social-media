@@ -6,6 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
 
+
 class User(Base):
     '''User Table'''
     __tablename__ = "users"
@@ -22,6 +23,7 @@ class User(Base):
     reactions = relationship("Reaction", back_populates="user")
     comments = relationship("Comment", back_populates="user")
     comment_responses = relationship("CommentResponse", back_populates="user")
+
 
 class Post(Base):
     '''Post Table'''
@@ -41,6 +43,7 @@ class Post(Base):
     reactions = relationship("Reaction", back_populates="post")
     comments = relationship("Comment", back_populates="post")
 
+
 class Reaction(Base):
     '''Reaction Table to store likes and dislikes'''
     __tablename__ = "reactions"
@@ -52,6 +55,7 @@ class Reaction(Base):
 
     post = relationship("Post", back_populates="reactions")
     user = relationship("User", back_populates="reactions")
+
 
 class Comment(Base):
     '''Comment table to store them'''
@@ -67,6 +71,7 @@ class Comment(Base):
     post = relationship("Post", back_populates="comments")
     responses = relationship("CommentResponse", back_populates="comment")
 
+
 class CommentResponse(Base):
     '''Comment Response model'''
     __tablename__ = "comment_responses"
@@ -79,6 +84,7 @@ class CommentResponse(Base):
 
     user = relationship("User", back_populates="comment_responses")
     comment = relationship("Comment", back_populates="responses")
+
 
 class Subscription(Base):
     '''Table to store all subscriptions'''

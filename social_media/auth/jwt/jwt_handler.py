@@ -6,20 +6,18 @@ from fastapi import HTTPException
 from jwt import PyJWTError
 from social_media.config import JWT_ALGORITHM, JWT_SECRET
 
+
 def token_response(token: str):
     '''Token Response'''
-    return {
-        "access token": token
-    }
+    return {"access token": token}
+
 
 def jwt_sign(username: str):
     '''Creating JWT'''
-    payload = {
-        "username": username,
-        "expiry": time.time() + 3600
-    }
+    payload = {"username": username, "expiry": time.time() + 3600}
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token_response(token)
+
 
 async def verify_token(token: str):
     '''Verifying JWT'''

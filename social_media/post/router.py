@@ -11,35 +11,27 @@ from social_media.helpers.auth_user import get_authenticated_user
 from social_media.helpers.recommends import get_random_recommendations
 from .schemas import PostSchema
 
-router = APIRouter(
-    prefix="/post",
-    tags = ["Post"]
-)
+router = APIRouter(prefix="/post", tags=["Post"])
+
 
 @router.get("/posts")
 async def get_posts():
     '''Getting all posts (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(
-            select(Post).join(User).options(joinedload(Post.author))
-        )
+        posts = await session.execute(select(Post).join(User).options(joinedload(Post.author)))
         all_posts = posts.scalars().all()
 
     # Extract the required data and include the author's username
     formatted_posts = []
     for post in all_posts:
         # Count the number of comments for the post
-        num_comments = await session.execute(
-            select(func.count(Comment.id))
-            .where(Comment.post_id == post.id)
-        )
+        num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
         num_comments = num_comments.scalar()
 
         # Count the number of comment responses for the post
         num_comment_responses = await session.execute(
-            select(func.count(CommentResponse.id))
-            .join(Comment, Comment.id == CommentResponse.comment_id)
-            .where(Comment.post_id == post.id)
+            select(func.count(CommentResponse.id)
+                   ).join(Comment, Comment.id == CommentResponse.comment_id).where(Comment.post_id == post.id)
         )
         num_comment_responses = num_comment_responses.scalar()
 
@@ -71,6 +63,7 @@ async def get_posts():
 
     return formatted_posts
 
+
 @router.post("/create_post")
 async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
     '''Creating Post (POST)'''
@@ -92,6 +85,7 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
 
     return {"message": "Post created successfully"}
 
+
 @router.get("/my_posts", dependencies=[Depends(JwtBearer())])
 async def get_user_posts(token: str = Depends(JwtBearer())):
     '''Getting only users post (GET)'''
@@ -106,6 +100,7 @@ async def get_user_posts(token: str = Depends(JwtBearer())):
         user_posts = posts.scalars().all()
 
     return user_posts
+
 
 @router.put("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
 async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(JwtBearer())):
@@ -131,6 +126,7 @@ async def update_post(post_id: int, updated_post: PostSchema, token: str = Depen
 
     return {"message": "Post updated successfully"}
 
+
 @router.delete("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
 async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
     '''Deleting Post (DELETE)'''
@@ -154,6 +150,7 @@ async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
         await session.commit()
     return {"message": "Post deleted successfully"}
 
+
 @router.post("/posts/{post_id}/reaction", dependencies=[Depends(JwtBearer())])
 async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBearer())):
     '''Reaction to post: like or dislike'''
@@ -170,10 +167,7 @@ async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBea
 
         # Check if the user has already reacted to the post
         reaction_obj = await session.execute(
-            select(Reaction).where(
-                Reaction.post_id == post.id,
-                Reaction.user_id == user_obj.id
-            )
+            select(Reaction).where(Reaction.post_id == post.id, Reaction.user_id == user_obj.id)
         )
         existing_reaction = reaction_obj.scalar_one_or_none()
 
@@ -204,6 +198,7 @@ async def react_to_post(post_id: int, reaction: str, token: str = Depends(JwtBea
 
     return {"message": "Reaction recorded successfully"}
 
+
 @router.get("/liked_posts", dependencies=[Depends(JwtBearer())])
 async def get_liked_posts(token: str = Depends(JwtBearer())):
     '''Getting all posts liked by the user (GET)'''
@@ -214,11 +209,9 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
     async with async_session_maker() as session:
         # Retrieve the posts liked by the user
         liked_posts = await session.execute(
-            select(Post)
-            .join(Reaction)
-            .join(User, User.id == Post.author_id)
-            .where(Reaction.user_id == user_obj.id, Reaction.reaction == "like")
-            .options(joinedload(Post.author))
+            select(Post).join(Reaction).join(User, User.id == Post.author_id
+                                             ).where(Reaction.user_id == user_obj.id,
+                                                     Reaction.reaction == "like").options(joinedload(Post.author))
         )
         user_liked_posts = liked_posts.scalars().all()
 
@@ -245,6 +238,7 @@ async def get_liked_posts(token: str = Depends(JwtBearer())):
 
         return formatted_posts
 
+
 @router.get("/search")
 async def search(q: str):
     '''Search posts by title or username (GET)'''
@@ -255,24 +249,18 @@ async def search(q: str):
 
         # Search for posts with the keyword in their title
         posts_by_title = await session.execute(
-            select(Post)
-            .join(user_alias, user_alias.id == Post.author_id)
-            .where(Post.title.ilike(f"%{q}%"))
-            .options(joinedload(Post.author))
+            select(Post).join(user_alias, user_alias.id == Post.author_id).where(Post.title.ilike(f"%{q}%")
+                                                                                 ).options(joinedload(Post.author))
         )
 
         # Search for posts with the keyword in the User's name, surname, or username
         posts_by_user = await session.execute(
-            select(Post)
-            .outerjoin(user_alias, user_alias.id == Post.author_id)
-            .where(
+            select(Post).outerjoin(user_alias, user_alias.id == Post.author_id).where(
                 or_(
-                    user_alias.name.ilike(f"%{q}%"),
-                    user_alias.surname.ilike(f"%{q}%"),
+                    user_alias.name.ilike(f"%{q}%"), user_alias.surname.ilike(f"%{q}%"),
                     user_alias.username.ilike(f"%{q}%")
                 )
-            )
-            .options(joinedload(Post.author))
+            ).options(joinedload(Post.author))
         )
 
         # Extract the required data for posts
@@ -305,6 +293,7 @@ async def search(q: str):
 
         return formatted_posts
 
+
 @router.get("/posts/{post_id}/view")
 async def view_post(post_id: int):
     '''Increment the view count of a post (GET)'''
@@ -312,11 +301,7 @@ async def view_post(post_id: int):
     async with async_session_maker() as session:
 
         post_with_author = (
-            await session.execute(
-                select(Post, User)
-                .join(User, User.id == Post.author_id)
-                .where(Post.id == post_id)
-            )
+            await session.execute(select(Post, User).join(User, User.id == Post.author_id).where(Post.id == post_id))
         ).first()
 
         if not post_with_author:
@@ -329,17 +314,13 @@ async def view_post(post_id: int):
         await session.commit()
 
         # Count the number of comments for the post
-        num_comments = await session.execute(
-            select(func.count(Comment.id))
-            .where(Comment.post_id == post_id)
-        )
+        num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post_id))
         num_comments = num_comments.scalar()
 
         # Count the number of comment responses for the post
         num_comment_responses = await session.execute(
-            select(func.count(CommentResponse.id))
-            .join(Comment, Comment.id == CommentResponse.comment_id)
-            .where(Comment.post_id == post_id)
+            select(func.count(CommentResponse.id)
+                   ).join(Comment, Comment.id == CommentResponse.comment_id).where(Comment.post_id == post_id)
         )
         num_comment_responses = num_comment_responses.scalar()
 

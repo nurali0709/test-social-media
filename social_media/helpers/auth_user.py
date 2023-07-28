@@ -5,6 +5,7 @@ from social_media.auth.models import User
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
 
+
 async def get_authenticated_user(token: str) -> User:
     '''Retrieve the authenticated user based on the token'''
     username = await verify_token(token)

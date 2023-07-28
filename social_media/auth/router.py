@@ -12,10 +12,8 @@ from .schemas import UserSignup, UserLogin, UserUpdate
 from .jwt.jwt_handler import jwt_sign
 from .jwt.jwt_bearer import JwtBearer
 
-router = APIRouter(
-    prefix="/auth",
-    tags = ["Auth"]
-)
+router = APIRouter(prefix="/auth", tags=["Auth"])
+
 
 @router.post("/signup")
 async def signup(user: UserSignup):
@@ -43,7 +41,7 @@ async def signup(user: UserSignup):
             email=user.email,
             name=user.name,
             surname=user.surname
-            )
+        )
 
         session.add(db_user)
         await session.commit()
@@ -52,6 +50,7 @@ async def signup(user: UserSignup):
         token = jwt_sign(user.username)
 
         return {"jwt": token}
+
 
 @router.post("/login")
 async def login(user: UserLogin):
@@ -95,13 +94,8 @@ async def update_user(user_id: int, user_update: UserUpdate, token: str = Depend
         # Commit the changes to the database
         await session.commit()
 
-    return UserUpdate(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        name=user.name,
-        surname=user.surname
-    )
+    return UserUpdate(id=user.id, username=user.username, email=user.email, name=user.name, surname=user.surname)
+
 
 @router.get("/users/")
 async def get_all_users():

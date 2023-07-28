@@ -2,6 +2,7 @@
 import random
 import string
 
+
 def generate_verification_code():
     '''Generate a 6-digit alphanumeric code'''
     characters = string.ascii_letters + string.digits

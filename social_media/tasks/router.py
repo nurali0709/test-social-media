@@ -8,10 +8,8 @@ from social_media.database import async_session_maker
 from social_media.helpers.verification import generate_verification_code
 from .tasks import send_verification_code
 
-router = APIRouter(
-    prefix="/celery",
-    tags = ["Celery"]
-)
+router = APIRouter(prefix="/celery", tags=["Celery"])
+
 
 @router.post("/forgot_password")
 async def forgot_password(email: str):
@@ -33,6 +31,7 @@ async def forgot_password(email: str):
         send_verification_code.delay(user_obj.email, verification_code)
 
         return {"message": "Verification code sent to email"}
+
 
 @router.post("/reset_password")
 async def reset_password(email: str, verification_code: str, new_password: str):

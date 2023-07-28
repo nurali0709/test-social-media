@@ -18,7 +18,7 @@ This is a Social media FastAPI project, where you can create, read, update and d
 
    ```
    As a package and dependency manager I used poetry, so firstly you need to install poetry on your machine. You can do it [here](https://python-poetry.org/docs/).
-   
+
    ```
    python3.11 -m venv .venv
    source /.venv/bin/activate

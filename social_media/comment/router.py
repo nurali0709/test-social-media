@@ -9,10 +9,8 @@ from social_media.helpers.auth_user import get_authenticated_user
 
 from .schemas import CommentCreate, CommentResponseCreate
 
-router = APIRouter(
-    prefix="/comment",
-    tags = ["Comment"]
-)
+router = APIRouter(prefix="/comment", tags=["Comment"])
+
 
 @router.post("/comments", dependencies=[Depends(JwtBearer())])
 async def create_comment(post_id: int, comment: CommentCreate, token: str = Depends(JwtBearer())):
@@ -36,6 +34,7 @@ async def create_comment(post_id: int, comment: CommentCreate, token: str = Depe
 
     return {"message": "Comment created successfully"}
 
+
 @router.post("/comments/{comment_id}/respond", dependencies=[Depends(JwtBearer())])
 async def respond_to_comment(comment_id: int, response: CommentResponseCreate, token: str = Depends(JwtBearer())):
     '''Responding to a Comment (POST)'''
@@ -58,6 +57,7 @@ async def respond_to_comment(comment_id: int, response: CommentResponseCreate, t
 
         return {"message": "Comment response created successfully"}
 
+
 @router.get("/comments/{post_id}")
 async def get_post_comments(post_id: int):
     '''Getting comments for a post (GET)'''
@@ -70,30 +70,27 @@ async def get_post_comments(post_id: int):
 
         # Retrieve the comments for the post, including the associated user's username
         comments = await session.execute(
-            select(Comment, User.username, User.name, User.surname)
-            .join(User, Comment.user_id == User.id)
-            .where(Comment.post_id == post_id)
+            select(Comment, User.username, User.name,
+                   User.surname).join(User, Comment.user_id == User.id).where(Comment.post_id == post_id)
         )
-         # Retrieve the responses for each comment
+        # Retrieve the responses for each comment
         post_comments = []
         for comment, username, name, surname in comments:
             responses = await session.execute(
-                select(CommentResponse, User.username, User.name, User.surname)
-                .join(User, CommentResponse.user_id == User.id)
-                .where(CommentResponse.comment_id == comment.id)
+                select(CommentResponse, User.username, User.name,
+                       User.surname).join(User, CommentResponse.user_id == User.id).where(
+                           CommentResponse.comment_id == comment.id
+                       )
             )
-            comment_responses = [
-                {
-                    "id": response.id,
-                    "text": response.text,
-                    "created_response": response.created_at.strftime("%Y-%m-%d %H:%M") if response.created_at else None,
-                    "user_id": response.user_id,
-                    "user_username": username,
-                    "user_name": name,
-                    "user_surname": surname,
-                }
-                for response, username, name, surname in responses
-            ]
+            comment_responses = [{
+                "id": response.id,
+                "text": response.text,
+                "created_response": response.created_at.strftime("%Y-%m-%d %H:%M") if response.created_at else None,
+                "user_id": response.user_id,
+                "user_username": username,
+                "user_name": name,
+                "user_surname": surname,
+            } for response, username, name, surname in responses]
             created_comment = comment.created_at.strftime("%Y-%m-%d %H:%M") if comment.created_at else None
             comment_data = {
                 "id": comment.id,

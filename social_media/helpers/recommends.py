@@ -5,13 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from social_media.auth.models import Post, User
 
+
 async def get_random_recommendations(session: AsyncSession, post_id: int) -> List[Post]:
     '''Handling generating recommendation posts'''
     result = (
         await session.execute(
-            select(Post, User)
-            .join(User, User.id == Post.author_id)
-            .where(Post.id != post_id)  # Exclude the current post
+            select(Post, User).join(User,
+                                    User.id == Post.author_id).where(Post.id != post_id)  # Exclude the current post
         )
     )
 
