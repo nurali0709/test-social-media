@@ -1,6 +1,6 @@
 '''Necessary SQLAlchemy modules'''
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Text, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -59,6 +59,7 @@ class Comment(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     text = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey('users.id'))
     post_id = Column(Integer, ForeignKey('posts.id'))
 
@@ -72,6 +73,7 @@ class CommentResponse(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     text = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     comment_id = Column(Integer, ForeignKey("comments.id"), nullable=False)
 

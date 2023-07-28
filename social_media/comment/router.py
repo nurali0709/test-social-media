@@ -86,6 +86,7 @@ async def get_post_comments(post_id: int):
                 {
                     "id": response.id,
                     "text": response.text,
+                    "created_response": response.created_at.strftime("%Y-%m-%d %H:%M") if response.created_at else None,
                     "user_id": response.user_id,
                     "user_username": username,
                     "user_name": name,
@@ -93,9 +94,11 @@ async def get_post_comments(post_id: int):
                 }
                 for response, username, name, surname in responses
             ]
+            created_comment = comment.created_at.strftime("%Y-%m-%d %H:%M") if comment.created_at else None
             comment_data = {
                 "id": comment.id,
                 "text": comment.text,
+                "created_comment": created_comment,
                 "user_id": comment.user_id,
                 "user_username": username,
                 "user_name": name,
