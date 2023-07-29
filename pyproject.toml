@@ -24,6 +24,7 @@ flower = "^2.0.0"
 redis = "^4.6.0"
 python-multipart = "^0.0.6"
 pillow = "^10.0.0"
+gunicorn = "^21.2.0"
 
 
 [tool.poetry.group.test.dependencies]
