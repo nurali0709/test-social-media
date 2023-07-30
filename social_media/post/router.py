@@ -9,6 +9,7 @@ from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
 from social_media.helpers.auth_user import get_authenticated_user
 from social_media.helpers.recommends import get_random_recommendations
+from social_media.helpers.posts import get_formatted_posts
 from .schemas import PostSchema
 
 router = APIRouter(prefix="/post", tags=["Post"])
@@ -18,156 +19,21 @@ router = APIRouter(prefix="/post", tags=["Post"])
 async def get_posts():
     '''Getting all posts (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(
-            select(Post).join(User).options(joinedload(Post.author)).order_by(desc(Post.created_at))
-        )
-        all_posts = posts.scalars().all()
-
-    # Extract the required data and include the author's username
-    formatted_posts = []
-    for post in all_posts:
-        # Count the number of comments for the post
-        num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
-        num_comments = num_comments.scalar()
-
-        # Count the number of comment responses for the post
-        num_comment_responses = await session.execute(
-            select(func.count(CommentResponse.id)
-                   ).join(Comment, Comment.id == CommentResponse.comment_id).where(Comment.post_id == post.id)
-        )
-        num_comment_responses = num_comment_responses.scalar()
-
-        # Calculate the total number of comments and comment responses
-        comments = num_comments + num_comment_responses
-
-        author_username = post.author.username if post.author else None
-        author_name = post.author.name if post.author else None
-        author_surname = post.author.surname if post.author else None
-        # Handle the case when created_at is None
-        created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
-        updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
-
-        formatted_posts.append({
-            "id": post.id,
-            "title": post.title,
-            "description": post.description,
-            "likes": post.likes,
-            "dislikes": post.dislikes,
-            "views": post.views,
-            "comments": comments,
-            "author_id": post.author_id,
-            "author_username": author_username,
-            "author_name": author_name,
-            "author_surname": author_surname,
-            "created_at": created_at,
-            "updated_at": updated_at,
-        })
-
-    return formatted_posts
+        return await get_formatted_posts(session, desc(Post.created_at))
 
 
 @router.get("/posts/order_likes")
 async def get_posts_ordered_by_likes():
     '''Getting all posts ordered by likes (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(
-            select(Post).join(User).options(joinedload(Post.author)).order_by(desc(Post.likes))
-        )
-        all_posts = posts.scalars().all()
-
-    # Extract the required data and include the author's username
-    formatted_posts = []
-    for post in all_posts:
-        # Count the number of comments for the post
-        num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
-        num_comments = num_comments.scalar()
-
-        # Count the number of comment responses for the post
-        num_comment_responses = await session.execute(
-            select(func.count(CommentResponse.id)
-                   ).join(Comment, Comment.id == CommentResponse.comment_id).where(Comment.post_id == post.id)
-        )
-        num_comment_responses = num_comment_responses.scalar()
-
-        # Calculate the total number of comments and comment responses
-        comments = num_comments + num_comment_responses
-
-        author_username = post.author.username if post.author else None
-        author_name = post.author.name if post.author else None
-        author_surname = post.author.surname if post.author else None
-        # Handle the case when created_at is None
-        created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
-        updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
-
-        formatted_posts.append({
-            "id": post.id,
-            "title": post.title,
-            "description": post.description,
-            "likes": post.likes,
-            "dislikes": post.dislikes,
-            "views": post.views,
-            "comments": comments,
-            "author_id": post.author_id,
-            "author_username": author_username,
-            "author_name": author_name,
-            "author_surname": author_surname,
-            "created_at": created_at,
-            "updated_at": updated_at,
-        })
-
-    return formatted_posts
+        return await get_formatted_posts(session, desc(Post.likes))
 
 
 @router.get("/posts/order_views")
 async def get_posts_ordered_by_views():
     '''Getting all posts ordered by views (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(
-            select(Post).join(User).options(joinedload(Post.author)).order_by(desc(Post.views))
-        )
-        all_posts = posts.scalars().all()
-
-    # Extract the required data and include the author's username
-    formatted_posts = []
-    for post in all_posts:
-        # Count the number of comments for the post
-        num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
-        num_comments = num_comments.scalar()
-
-        # Count the number of comment responses for the post
-        num_comment_responses = await session.execute(
-            select(func.count(CommentResponse.id)
-                   ).join(Comment, Comment.id == CommentResponse.comment_id).where(Comment.post_id == post.id)
-        )
-        num_comment_responses = num_comment_responses.scalar()
-
-        # Calculate the total number of comments and comment responses
-        comments = num_comments + num_comment_responses
-
-        author_username = post.author.username if post.author else None
-        author_name = post.author.name if post.author else None
-        author_surname = post.author.surname if post.author else None
-        # Handle the case when created_at is None
-        created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
-        updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
-
-        formatted_posts.append({
-            "id": post.id,
-            "title": post.title,
-            "description": post.description,
-            "likes": post.likes,
-            "dislikes": post.dislikes,
-            "views": post.views,
-            "comments": comments,
-            "author_id": post.author_id,
-            "author_username": author_username,
-            "author_name": author_name,
-            "author_surname": author_surname,
-            "created_at": created_at,
-            "updated_at": updated_at,
-        })
-
-    return formatted_posts
+        return await get_formatted_posts(session, desc(Post.views))
 
 
 @router.post("/create_post")
