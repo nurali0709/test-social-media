@@ -1,6 +1,6 @@
 '''Handling post endpoint'''
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, or_, func
+from sqlalchemy import select, or_, func, desc
 from sqlalchemy.orm import joinedload, aliased
 
 from social_media.auth.models import Post, User, Reaction, Comment, CommentResponse
@@ -18,7 +18,9 @@ router = APIRouter(prefix="/post", tags=["Post"])
 async def get_posts():
     '''Getting all posts (GET)'''
     async with async_session_maker() as session:
-        posts = await session.execute(select(Post).join(User).options(joinedload(Post.author)))
+        posts = await session.execute(
+            select(Post).join(User).options(joinedload(Post.author)).order_by(desc(Post.created_at))
+        )
         all_posts = posts.scalars().all()
 
     # Extract the required data and include the author's username
