@@ -9,7 +9,7 @@ from social_media.helpers.auth_user import get_authenticated_user
 from .models import User
 from .schemas import UserSignup, UserLogin, UserUpdate
 
-from .jwt.jwt_handler import jwt_sign
+from .jwt.jwt_handler import jwt_sign, verify_token
 from .jwt.jwt_bearer import JwtBearer
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -70,6 +70,25 @@ async def login(user: UserLogin, response: Response):
         response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
 
         return {"jwt": token}
+
+
+@router.post("/logout")
+async def logout(response: Response, token: str = Depends(JwtBearer())):
+    '''Logout user and delete token cookie'''
+    if not token:
+        raise HTTPException(status_code=401, detail="No token found in the cookie")
+
+    try:
+        username = await verify_token(token)
+    except HTTPException as exc:
+        raise exc
+
+    # Here, you can perform any additional logout-related actions, if needed.
+
+    # Set the token cookie to an empty value with an expired date
+    response.delete_cookie(key="access_token")
+
+    return {"message": "Logout successful"}
 
 
 @router.put("/users/{user_id}/update")
