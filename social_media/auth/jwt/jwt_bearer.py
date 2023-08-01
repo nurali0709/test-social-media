@@ -1,6 +1,6 @@
 '''JWT handling modules'''
-from fastapi import Request, HTTPException, Cookie
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Request, HTTPException
+from fastapi.security import HTTPBearer
 
 
 class JwtBearer(HTTPBearer):

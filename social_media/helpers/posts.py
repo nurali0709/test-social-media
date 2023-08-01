@@ -1,10 +1,11 @@
+'''Shortening posts response'''
 from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from social_media.auth.models import Post, User, Comment, CommentResponse
 
 
 async def get_formatted_posts(session, ordering):
+    '''Helper to shorten posts query'''
     posts = await session.execute(select(Post).join(User).options(joinedload(Post.author)).order_by(ordering))
     all_posts = posts.scalars().all()
 

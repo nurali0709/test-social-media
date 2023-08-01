@@ -83,8 +83,6 @@ async def logout(response: Response, token: str = Depends(JwtBearer())):
     except HTTPException as exc:
         raise exc
 
-    # Here, you can perform any additional logout-related actions, if needed.
-
     # Set the token cookie to an empty value with an expired date
     response.delete_cookie(key="access_token")
 
