@@ -1,7 +1,7 @@
 '''Handling Authentication'''
 import bcrypt
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Response
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from social_media.database import async_session_maker
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/signup")
-async def signup(user: UserSignup):
+async def signup(user: UserSignup, response: Response):
     '''Signing up user with JWT'''
     async with async_session_maker() as session:
         try:
@@ -46,14 +46,16 @@ async def signup(user: UserSignup):
         session.add(db_user)
         await session.commit()
 
-        # Generate JWT token upon successful signup
+        # Generate a JWT token
         token = jwt_sign(user.username)
+
+        response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
 
         return {"jwt": token}
 
 
 @router.post("/login")
-async def login(user: UserLogin):
+async def login(user: UserLogin, response: Response):
     '''Login user with JWT'''
     async with async_session_maker() as session:
         db_user = await session.execute(select(User).where(User.username == user.username))
@@ -64,6 +66,8 @@ async def login(user: UserLogin):
 
         # Generate a JWT token
         token = jwt_sign(user.username)
+
+        response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
 
         return {"jwt": token}
 

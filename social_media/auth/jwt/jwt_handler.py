@@ -16,7 +16,7 @@ def jwt_sign(username: str):
     '''Creating JWT'''
     payload = {"username": username, "expiry": time.time() + 3600}
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return token_response(token)
+    return token
 
 
 async def verify_token(token: str):

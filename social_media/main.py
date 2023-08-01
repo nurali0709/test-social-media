@@ -21,6 +21,7 @@ app.include_router(subscription_router)
 app.include_router(celery_router)
 
 origins = [
+    "http://localhost:8000",
     "http://localhost:8080",
 ]
 
@@ -28,8 +29,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
-    allow_headers=[
-        "Content-Type", "Set-Cookie", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Authorization"
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
