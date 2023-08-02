@@ -69,7 +69,17 @@ async def login(user: UserLogin, response: Response):
 
         response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
 
-        return {"jwt": token}
+        return {
+            "user": {
+                "id": user_obj.id,
+                "username": user_obj.username,
+                "name": user_obj.name,
+                "surname": user_obj.surname,
+                "email": user_obj.email,
+                # Add more user data fields as needed
+            },
+            "jwt": token
+        }
 
 
 @router.post("/logout")
