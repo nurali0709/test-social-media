@@ -67,7 +67,7 @@ async def login(user: UserLogin, response: Response):
         # Generate a JWT token
         token = jwt_sign(user.username)
 
-        response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
+        response.set_cookie(key="access_token", value=token, httponly=True, samesite="None", secure=True)
 
         return {
             "user": {
