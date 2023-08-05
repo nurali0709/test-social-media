@@ -11,6 +11,7 @@ class JwtBearer(HTTPBearer):
 
     async def __call__(self, request: Request):
         token = request.cookies.get("access_token")
+        print("Token extracted from cookie:", token)
         if token:
             return token
         if self.auto_error:

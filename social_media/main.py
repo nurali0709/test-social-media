@@ -1,5 +1,5 @@
 '''Initializing FastAPI'''
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from fastapi.middleware.cors import CORSMiddleware
 from .auth.router import router as auth_router
@@ -19,6 +19,15 @@ app.include_router(comment_router)
 app.include_router(subscription_router)
 
 app.include_router(celery_router)
+
+
+@app.middleware("http")
+async def log_request_headers(request: Request, call_next):
+    token = request.cookies.get("access_token")
+    print("Token in Request Cookie:", token)
+    response = await call_next(request)
+    return response
+
 
 origins = [
     "http://localhost:8000",

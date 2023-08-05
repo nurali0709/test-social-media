@@ -85,6 +85,7 @@ async def login(user: UserLogin, response: Response):
 @router.post("/logout")
 async def logout(response: Response, token: str = Depends(JwtBearer())):
     '''Logout user and delete token cookie'''
+
     if not token:
         raise HTTPException(status_code=401, detail="No token found in the cookie")
 
