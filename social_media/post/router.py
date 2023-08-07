@@ -340,7 +340,7 @@ async def view_post(post_id: int):
 
 
 @router.get("/users/{user_id}/posts")
-async def get_user_posts(user_id: int):
+async def get_any_user_posts(user_id: int):
     '''Getting all posts by a user (GET)'''
 
     async with async_session_maker() as session:

@@ -23,6 +23,7 @@ app.include_router(celery_router)
 
 @app.middleware("http")
 async def log_request_headers(request: Request, call_next):
+    '''Checking if there is a token in cookie from front-end'''
     token = request.cookies.get("access_token")
     print("Token in Request Cookie:", token)
     response = await call_next(request)
