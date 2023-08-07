@@ -357,3 +357,48 @@ async def get_user_posts(user_id: int):
         user_posts = posts.scalars().all()
 
         return user_posts
+
+
+@router.get("/users/{user_id}/liked_posts")
+async def get_user_liked_posts(user_id: int):
+    '''Getting all posts liked by a user (GET)'''
+
+    async with async_session_maker() as session:
+
+        # Retrieve the user from the database
+        user = await session.execute(select(User).where(User.id == user_id))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Retrieve the posts liked by the user
+        liked_posts = await session.execute(
+            select(Post).join(Reaction).join(User, User.id == Post.author_id
+                                             ).where(Reaction.user_id == user_obj.id,
+                                                     Reaction.reaction == "like").options(joinedload(Post.author))
+        )
+        user_liked_posts = liked_posts.scalars().all()
+
+        # Extract the required data and include the author's username
+        formatted_posts = []
+        for post in user_liked_posts:
+            author_username = post.author.username if post.author else None
+
+            created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
+            updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+
+            formatted_posts.append({
+                "id": post.id,
+                "title": post.title,
+                "description": post.description,
+                "likes": post.likes,
+                "dislikes": post.dislikes,
+                "views": post.views,
+                "author_id": post.author_id,
+                "author_username": author_username,
+                "created_at": created_at,
+                "updated_at": updated_at,
+            })
+
+        return formatted_posts
