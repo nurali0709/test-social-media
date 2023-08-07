@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: my_database
+
+  redis:
+    image: redis:6.2
+
+  celery:
+    build: .
+    command: celery -A tasks worker -l info
+    depends_on:
+      - redis
+      - postgres
+
+  flower:
+    image: mher/flower
+    depends_on:
+      - celery
+
+  fastapi:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - postgres
+      - celery
+    ports:
+      - 8000:8000
