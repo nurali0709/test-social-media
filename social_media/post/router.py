@@ -337,3 +337,23 @@ async def view_post(post_id: int):
             },
             "recommendations": recommendations
         }
+
+
+@router.get("/users/{user_id}/posts")
+async def get_user_posts(user_id: int):
+    '''Getting all posts by a user (GET)'''
+
+    async with async_session_maker() as session:
+
+        # Retrieve the user from the database
+        user = await session.execute(select(User).where(User.id == user_id))
+        user_obj = user.scalar_one_or_none()
+
+        if not user_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Retrieve the user's posts
+        posts = await session.execute(select(Post).where(Post.author_id == user_obj.id))
+        user_posts = posts.scalars().all()
+
+        return user_posts
