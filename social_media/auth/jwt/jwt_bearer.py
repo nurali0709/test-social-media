@@ -10,8 +10,7 @@ class JwtBearer(HTTPBearer):
         super(JwtBearer, self).__init__(auto_error=auto_Error)
 
     async def __call__(self, request: Request):
-        token = request.cookies.get("access_token")
-        print("Token extracted from cookie:", token)
+        token = request.headers.get("Authorization")
         if token:
             return token
         if self.auto_error:

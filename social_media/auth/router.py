@@ -49,8 +49,6 @@ async def signup(user: UserSignup, response: Response):
         # Generate a JWT token
         token = jwt_sign(user.username)
 
-        response.set_cookie(key="access_token", value=token, httponly=True, samesite="strict")
-
         return {"jwt": token}
 
 
@@ -66,8 +64,6 @@ async def login(user: UserLogin, response: Response):
 
         # Generate a JWT token
         token = jwt_sign(user.username)
-
-        response.set_cookie(key="access_token", value=token, httponly=True, samesite="None", secure=True)
 
         return {
             "user": {
@@ -93,9 +89,6 @@ async def logout(response: Response, token: str = Depends(JwtBearer())):
         username = await verify_token(token)
     except HTTPException as exc:
         raise exc
-
-    # Set the token cookie to an empty value with an expired date
-    response.delete_cookie(key="access_token")
 
     return {"message": "Logout successful"}
 
