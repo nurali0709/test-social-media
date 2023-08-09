@@ -1,7 +1,7 @@
 '''Handling Authentication'''
 import bcrypt
 
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from social_media.database import async_session_maker
@@ -72,7 +72,6 @@ async def login(user: UserLogin):
                 "name": user_obj.name,
                 "surname": user_obj.surname,
                 "email": user_obj.email,
-                # Add more user data fields as needed
             },
             "jwt": token
         }
@@ -129,7 +128,7 @@ async def get_all_users():
         users = await session.execute(select(User))
         all_users = users.scalars().all()
 
-    # Extract the required data
+    # Extract the user data
     formatted_users = []
     for user in all_users:
         formatted_users.append({

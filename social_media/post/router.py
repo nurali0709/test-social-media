@@ -6,10 +6,13 @@ from sqlalchemy.orm import joinedload, aliased
 from social_media.auth.models import Post, User, Reaction, Comment, CommentResponse
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
+
 from social_media.database import async_session_maker
+
 from social_media.helpers.auth_user import get_authenticated_user
 from social_media.helpers.recommends import get_random_recommendations
 from social_media.helpers.posts import get_formatted_posts
+
 from social_media.utils.format_post import format_post_data
 from .schemas import PostSchema
 
@@ -48,7 +51,6 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
         user = await session.execute(select(User).where(User.username == username))
         user_obj = user.scalar_one_or_none()
 
-    # Create the post
     new_post = Post(title=post.title, description=post.description, likes=0, dislikes=0, author_id=user_obj.id)
 
     # Add the post to the session and commit the changes
@@ -118,7 +120,6 @@ async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
         if post.author_id != user_obj.id:
             raise HTTPException(status_code=403, detail="Unauthorized to delete the post")
 
-        # Delete the post
         await session.delete(post)
         await session.commit()
     return {"message": "Post deleted successfully"}

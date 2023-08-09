@@ -1,7 +1,7 @@
 '''Shortening posts response'''
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from social_media.auth.models import Post, User, Comment, CommentResponse
+from social_media.auth.models import Post, User
 from social_media.utils.format_post import format_post_data
 
 

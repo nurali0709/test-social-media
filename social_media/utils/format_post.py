@@ -2,7 +2,6 @@ from sqlalchemy import select, func
 from social_media.auth.models import Comment, CommentResponse
 
 
-# social_media.utils
 async def format_post_data(post, session):
     num_comments = await session.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
     num_comments = num_comments.scalar()
