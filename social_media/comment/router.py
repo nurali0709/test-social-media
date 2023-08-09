@@ -25,7 +25,6 @@ async def create_comment(post_id: int, comment: CommentCreate, token: str = Depe
         if not post:
             raise HTTPException(status_code=404, detail="Post not found")
 
-        # Create the comment
         new_comment = Comment(text=comment.text, user_id=user_obj.id, post_id=post_id)
 
         # Add the comment to the session and commit the changes

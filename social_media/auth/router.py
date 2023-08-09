@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
 @router.post("/signup")
-async def signup(user: UserSignup, response: Response):
+async def signup(user: UserSignup):
     '''Signing up user with JWT'''
     async with async_session_maker() as session:
         try:
@@ -53,7 +53,7 @@ async def signup(user: UserSignup, response: Response):
 
 
 @router.post("/login")
-async def login(user: UserLogin, response: Response):
+async def login(user: UserLogin):
     '''Login user with JWT'''
     async with async_session_maker() as session:
         db_user = await session.execute(select(User).where(User.username == user.username))
@@ -79,14 +79,14 @@ async def login(user: UserLogin, response: Response):
 
 
 @router.post("/logout")
-async def logout(response: Response, token: str = Depends(JwtBearer())):
+async def logout(token: str = Depends(JwtBearer())):
     '''Logout user and delete token cookie'''
 
     if not token:
         raise HTTPException(status_code=401, detail="No token found in the cookie")
 
     try:
-        username = await verify_token(token)
+        await verify_token(token)
     except HTTPException as exc:
         raise exc
 
