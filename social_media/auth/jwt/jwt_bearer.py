@@ -11,7 +11,11 @@ class JwtBearer(HTTPBearer):
 
     async def __call__(self, request: Request):
         token = request.headers.get("Authorization")
-        if token:
+        if token and token.startswith("Bearer "):
+            # Remove "Bearer " from the token
+            token = token[len("Bearer "):]
+            return token
+        elif token:
             return token
         if self.auto_error:
             raise HTTPException(status_code=401, detail="Invalid or missing authentication token")
