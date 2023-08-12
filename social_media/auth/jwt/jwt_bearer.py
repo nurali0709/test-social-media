@@ -16,3 +16,12 @@ class JwtBearer(HTTPBearer):
         if self.auto_error:
             raise HTTPException(status_code=401, detail="Invalid or missing authentication token")
         return None
+
+    # # For cookie-based authentication
+    # async def __call__(self, request: Request):
+    #     token = request.cookies.get("jwt")
+    #     if token:
+    #         return token
+    #     if self.auto_error:
+    #         raise HTTPException(status_code=401, detail="Invalid or missing authentication token")
+    #     return None
