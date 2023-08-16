@@ -6,10 +6,6 @@ services:
     container_name: db_social
     env_file:
       - .env
-    environment:
-      POSTGRES_USER: social
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: my_database
 
   redis:
     image: redis:7
@@ -21,7 +17,8 @@ services:
     env_file:
       - .env
     container_name: fastapi_social
-    command: ["./docker/app.sh"]
+    entrypoint: ["sh", "-c"]
+    command: ["alembic upgrade head && gunicorn social_media.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"]
     depends_on:
       - postgres
       - redis
@@ -31,16 +28,22 @@ services:
   celery:
     build:
       context: .
+    env_file:
+      - .env
     container_name: celery_social
-    command: ["./docker/celery.sh", "celery"]
+    entrypoint: ["celery"]
+    command: ["--app=tasks.tasks:celery", "worker", "-l", "INFO"]
     depends_on:
       - redis
 
   flower:
     build:
       context: .
+    env_file:
+      - .env
     container_name: flower_social
-    command: ["/social/docker/celery.sh", "flower"]
+    entrypoint: ["celery"]
+    command: ["--app=tasks.tasks:celery", "flower"]
     depends_on:
       - celery
       - redis
