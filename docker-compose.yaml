@@ -2,32 +2,47 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:13.3
+    image: postgres:15
+    container_name: db_social
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: social
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: my_database
 
   redis:
-    image: redis:6.2
-
-  celery:
-    build: .
-    command: celery -A tasks worker -l info
-    depends_on:
-      - redis
-      - postgres
-
-  flower:
-    image: mher/flower
-    depends_on:
-      - celery
+    image: redis:7
+    container_name: redis_social
 
   fastapi:
-    build: .
-    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: fastapi_social
+    command: ["./docker/app.sh"]
     depends_on:
       - postgres
-      - celery
+      - redis
     ports:
-      - 8000:8000
+      - 9999:8000
+
+  celery:
+    build:
+      context: .
+    container_name: celery_social
+    command: ["./docker/celery.sh", "celery"]
+    depends_on:
+      - redis
+
+  flower:
+    build:
+      context: .
+    container_name: flower_social
+    command: ["/social/docker/celery.sh", "flower"]
+    depends_on:
+      - celery
+      - redis
+    ports:
+      - 8888:5555

@@ -4,9 +4,9 @@ import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from celery import Celery
-from social_media.config import SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, SMTP_USER
+from social_media.config import SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, SMTP_USER, REDIS_HOST, REDIS_PORT
 
-celery = Celery('tasks', broker="redis://localhost:6379")
+celery = Celery('tasks', broker=f"redis://{REDIS_HOST}:{REDIS_PORT}")
 
 
 @celery.task
