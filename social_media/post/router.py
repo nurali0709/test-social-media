@@ -2,13 +2,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, or_, func, desc
 from sqlalchemy.orm import joinedload, aliased
+# from elasticsearch import Elasticsearch
 
 from social_media.auth.models import Post, User, Reaction, Comment, CommentResponse
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 
 from social_media.database import async_session_maker
-
 from social_media.helpers.auth_user import get_authenticated_user
 from social_media.helpers.recommends import get_random_recommendations
 from social_media.helpers.posts import get_formatted_posts
@@ -17,6 +17,8 @@ from social_media.utils.format_post import format_post_data
 from .schemas import PostSchema
 
 router = APIRouter(prefix="/post", tags=["Post"])
+
+# es_client = Elasticsearch([{'host': 'localhost', 'port': 9200, 'scheme': 'http'}])
 
 
 @router.get("/posts")
@@ -57,6 +59,17 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
     async with async_session_maker() as session:
         session.add(new_post)
         await session.commit()
+
+        # es_index = "posts"
+        # es_action = {
+        #     "_index": es_index,
+        #     "_id": new_post.id,
+        #     "_source": {
+        #         "title": new_post.title,
+        #         "description": new_post.description
+        #     }
+        # }
+        # es_client.index(index=es_index, id=new_post.id, body=es_action["_source"])
 
     return {"message": "Post created successfully"}
 
