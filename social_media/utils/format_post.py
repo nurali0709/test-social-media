@@ -47,6 +47,8 @@ async def format_post_data(post, session):
         "author_username": author_username,
         "author_name": author_name,
         "author_surname": author_surname,
+        "created_at": created_at.strftime("%Y-%m-%d") if created_at else None,
         "created_time_ago": created_time_ago,
+        "updated_at": updated_at.strftime("%Y-%m-%d") if updated_at else None,
         "updated_time_ago": updated_time_ago,
     }
