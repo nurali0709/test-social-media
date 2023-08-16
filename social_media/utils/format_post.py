@@ -1,3 +1,5 @@
+import humanize
+from datetime import datetime, timedelta
 from sqlalchemy import select, func
 from social_media.auth.models import Comment, CommentResponse
 
@@ -18,8 +20,20 @@ async def format_post_data(post, session):
     author_name = post.author.name if post.author else None
     author_surname = post.author.surname if post.author else None
 
-    created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
-    updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
+    created_at = post.created_at
+    updated_at = post.updated_at
+
+    if created_at:
+        time_difference = datetime.utcnow() - created_at
+        created_time_ago = humanize.naturaltime(time_difference)
+    else:
+        created_time_ago = None
+
+    if updated_at:
+        time_difference = datetime.utcnow() - updated_at
+        updated_time_ago = humanize.naturaltime(time_difference)
+    else:
+        updated_time_ago = None
 
     return {
         "id": post.id,
@@ -33,6 +47,6 @@ async def format_post_data(post, session):
         "author_username": author_username,
         "author_name": author_name,
         "author_surname": author_surname,
-        "created_at": created_at,
-        "updated_at": updated_at,
+        "created_time_ago": created_time_ago,
+        "updated_time_ago": updated_time_ago,
     }
