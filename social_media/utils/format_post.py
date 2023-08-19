@@ -43,6 +43,7 @@ async def format_post_data(post, session):
         "dislikes": post.dislikes,
         "views": post.views,
         "comments": comments,
+        "image": post.image,
         "author_id": post.author_id,
         "author_username": author_username,
         "author_name": author_name,

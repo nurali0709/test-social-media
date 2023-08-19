@@ -35,6 +35,7 @@ class Post(Base):
     likes = Column(Integer, default=0)
     dislikes = Column(Integer, default=0)
     views = Column(Integer, default=0)
+    image = Column(String)
     created_at = Column(Date, default=datetime.utcnow)
     updated_at = Column(Date, default=datetime.utcnow, onupdate=datetime.utcnow)
     author_id = Column(Integer, ForeignKey("users.id"))

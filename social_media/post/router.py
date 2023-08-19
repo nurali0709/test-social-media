@@ -1,5 +1,7 @@
 '''Handling post endpoint'''
-from fastapi import APIRouter, Depends, HTTPException
+import os
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy import select, or_, func, desc
 from sqlalchemy.orm import joinedload, aliased
 # from elasticsearch import Elasticsearch
@@ -43,7 +45,12 @@ async def get_posts_ordered_by_views():
 
 
 @router.post("/create_post")
-async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
+async def create_post(
+    title: str,
+    description: str,
+    image: UploadFile = File(...),
+    token: str = Depends(JwtBearer()),
+):
     '''Creating Post (POST)'''
 
     username = await verify_token(token)
@@ -53,7 +60,17 @@ async def create_post(post: PostSchema, token: str = Depends(JwtBearer())):
         user = await session.execute(select(User).where(User.username == username))
         user_obj = user.scalar_one_or_none()
 
-    new_post = Post(title=post.title, description=post.description, likes=0, dislikes=0, author_id=user_obj.id)
+    new_post = Post(title=title, description=description, likes=0, dislikes=0, author_id=user_obj.id)
+
+    if image:
+        image_data = await image.read()
+        image_filename = f"post_{new_post.title}_image.jpg"
+        image_path = os.path.join("static", image_filename)
+
+        with open(image_path, "wb") as f:
+            f.write(image_data)
+
+        new_post.image = str("static/" + image_filename)
 
     # Add the post to the session and commit the changes
     async with async_session_maker() as session:
