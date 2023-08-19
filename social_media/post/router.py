@@ -20,8 +20,6 @@ from .schemas import PostSchema
 
 router = APIRouter(prefix="/post", tags=["Post"])
 
-# es_client = Elasticsearch([{'host': 'localhost', 'port': 9200, 'scheme': 'http'}])
-
 
 @router.get("/posts")
 async def get_posts():
@@ -76,17 +74,6 @@ async def create_post(
     async with async_session_maker() as session:
         session.add(new_post)
         await session.commit()
-
-        # es_index = "posts"
-        # es_action = {
-        #     "_index": es_index,
-        #     "_id": new_post.id,
-        #     "_source": {
-        #         "title": new_post.title,
-        #         "description": new_post.description
-        #     }
-        # }
-        # es_client.index(index=es_index, id=new_post.id, body=es_action["_source"])
 
     return {"message": "Post created successfully"}
 
