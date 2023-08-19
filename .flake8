@@ -1,0 +1,8 @@
+[flake8]
+ignore = C101,D403,F403,F405,I100,I201,W503,W504, Q000, F821, Q002, B008
+exclude = .git, __pychace__, migrations
+filename = *.py
+accept-encoding = utf-8
+max-complexity = 12
+max-linenumber = 500
+max-line-length = 119

@@ -1,6 +1,6 @@
 import humanize
-from datetime import datetime, timedelta
-from sqlalchemy import select, func
+from datetime import datetime
+from sqlalchemy import func, select
 from social_media.auth.models import Comment, CommentResponse
 
 

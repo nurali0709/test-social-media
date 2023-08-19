@@ -1,20 +1,16 @@
 '''Handling post endpoint'''
 import os
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from sqlalchemy import select, or_, func, desc
-from sqlalchemy.orm import joinedload, aliased
-# from elasticsearch import Elasticsearch
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from sqlalchemy import desc, func, or_, select
+from sqlalchemy.orm import aliased, joinedload
 
-from social_media.auth.models import Post, User, Reaction, Comment, CommentResponse
+from social_media.auth.models import Comment, CommentResponse, Post, Reaction, User
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
-
 from social_media.database import async_session_maker
 from social_media.helpers.auth_user import get_authenticated_user
 from social_media.helpers.recommends import get_random_recommendations
 from social_media.helpers.posts import get_formatted_posts
-
 from social_media.utils.format_post import format_post_data
 from .schemas import PostSchema
 

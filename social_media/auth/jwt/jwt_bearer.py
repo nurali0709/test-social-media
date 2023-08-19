@@ -1,5 +1,5 @@
 '''JWT handling modules'''
-from fastapi import Request, HTTPException
+from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer
 
 
@@ -27,5 +27,8 @@ class JwtBearer(HTTPBearer):
     #     if token:
     #         return token
     #     if self.auto_error:
-    #         raise HTTPException(status_code=401, detail="Invalid or missing authentication token")
+    #         raise HTTPException(
+    # status_code=401,
+    # detail="Invalid or missing authentication token"
+    # )
     #     return None
