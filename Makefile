@@ -2,6 +2,10 @@
 lint:
 	poetry run pylint ./social_media
 
+.PHONY: flake
+flake:
+	poetry run flake8
+
 .PHONY: install-pre-commit
 install-pre-commit:
 	poetry run pre-commit uninstall; poetry run pre-commit install

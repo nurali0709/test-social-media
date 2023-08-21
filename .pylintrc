@@ -1,5 +1,5 @@
 [MASTER]
 extension-pkg-allow-list=pydantic
-disable=too-few-public-methods
+disable=too-few-public-methods, C0103, R1725
 [FORMAT]
 max-line-length = 120
