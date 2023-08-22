@@ -28,6 +28,7 @@ gunicorn = "^21.2.0"
 fastapi-users = {extras = ["sqlalchemy"], version = "^12.1.0"}
 elasticsearch = "^8.9.0"
 flake8 = "^6.1.0"
+babel = "^2.12.1"
 
 
 [tool.poetry.group.test.dependencies]
