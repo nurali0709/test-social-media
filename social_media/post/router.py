@@ -9,7 +9,7 @@ from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
 from social_media.helpers.auth_user import get_authenticated_user
-from social_media.helpers.recommends import get_random_recommendations
+from social_media.ai.recommendations import get_similar_posts, get_similarity_matrix
 from social_media.helpers.posts import get_formatted_posts
 from social_media.utils.format_post import format_post_data
 from .schemas import PostSchema
@@ -296,8 +296,10 @@ async def view_post(post_id: int):
         # Calculate the total number of comments and comment responses
         total_num_comments = num_comments + num_comment_responses
 
-        # Return the updated view count and the three random recommended posts
-        recommendations = await get_random_recommendations(session, post_id)
+        similarity_matrix = await get_similarity_matrix(session)
+        recommendations = await get_similar_posts(session, post_id, similarity_matrix)
+
+        # recommendations = await get_random_recommendations(session, post_id)
         created_at = post.created_at.strftime("%Y-%m-%d") if post.created_at else None
         updated_at = post.updated_at.strftime("%Y-%m-%d") if post.updated_at else None
         return {
