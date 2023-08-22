@@ -1,8 +1,8 @@
 '''Handling Comment Section'''
-from fastapi import Depends, HTTPException, APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 
-from social_media.auth.models import User, Comment, Post, CommentResponse
+from social_media.auth.models import Comment, CommentResponse, Post, User
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.database import async_session_maker
 from social_media.helpers.auth_user import get_authenticated_user
@@ -81,6 +81,7 @@ async def get_post_comments(post_id: int):
                            CommentResponse.comment_id == comment.id
                        )
             )
+
             comment_responses = [{
                 "id": response.id,
                 "text": response.text,

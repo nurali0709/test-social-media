@@ -13,7 +13,7 @@ async def get_similarity_matrix(session: AsyncSession):
     all_posts = posts.scalars().all()
 
     # Extract keywords from posts
-    post_keywords = [post.description for post in all_posts]  # Modify based on your data
+    post_keywords = [post.description for post in all_posts]
 
     # Create TF-IDF vectorizer
     tfidf_vectorizer = TfidfVectorizer()
@@ -38,8 +38,8 @@ async def get_similar_posts(session: AsyncSession, post_id: int, similarity_matr
 
         # Exclude the current post and get top recommendations
         top_recommendations = []
-        for post_index, _ in sorted_similar_scores[1:4]:  # Get top 3 recommendations
-            post = await session.get(Post, post_index + 1)  # Adjust for zero-based indexing
+        for post_index, _ in sorted_similar_scores[1:4]:
+            post = await session.get(Post, post_index + 1)
             if post:
                 top_recommendations.append(post)
 
