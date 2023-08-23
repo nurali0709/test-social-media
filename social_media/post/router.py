@@ -42,7 +42,7 @@ async def get_posts_ordered_by_views():
 async def create_post(
     title: str,
     description: str,
-    image: UploadFile = File(...),
+    image: UploadFile = File(None),
     token: str = Depends(JwtBearer()),
 ):
     '''Creating Post (POST)'''

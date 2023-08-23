@@ -1,6 +1,6 @@
 [flake8]
-ignore = C101,D403,F403,F405,I100,I201,W503,W504, Q000, F821, Q002, B008, E126
-exclude = .git, __pychace__, migrations
+ignore = C101,D403,F403,F405,I100,I201,W503,W504, Q000, F821, Q002, B008, E126, F401, A003
+exclude = .git, __pycache__, migrations/
 filename = *.py
 accept-encoding = utf-8
 max-complexity = 12
