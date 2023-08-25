@@ -8,6 +8,7 @@ from social_media.auth.models import Comment, CommentResponse, Post, Reaction, U
 from social_media.auth.jwt.jwt_bearer import JwtBearer
 from social_media.auth.jwt.jwt_handler import verify_token
 from social_media.database import async_session_maker
+from social_media.elastic.search import Search
 from social_media.helpers.auth_user import get_authenticated_user
 from social_media.ai.recommendations import get_similar_posts, get_similarity_matrix
 from social_media.helpers.posts import get_formatted_posts
@@ -15,6 +16,12 @@ from social_media.utils.format_post import format_post_data
 from .schemas import PostSchema
 
 router = APIRouter(prefix="/post", tags=["Post"])
+
+
+class IndexResource:
+
+    def __init__(self):
+        self.search = Search()
 
 
 @router.get("/posts")
@@ -43,6 +50,7 @@ async def create_post(
     title: str,
     description: str,
     image: UploadFile = File(None),
+    index_resource: IndexResource = Depends(IndexResource),
     token: str = Depends(JwtBearer()),
 ):
     '''Creating Post (POST)'''
@@ -71,7 +79,11 @@ async def create_post(
         session.add(new_post)
         await session.commit()
 
-    return {"message": "Post created successfully"}
+    post_document = {"title": new_post.title, "description": new_post.description}
+
+    doc = index_resource.search.create_document(index_name='posts', document=post_document, id=new_post.id)
+
+    return {"message": "Post created successfully", "data": doc}
 
 
 @router.get("/my_posts", dependencies=[Depends(JwtBearer())])
@@ -91,7 +103,12 @@ async def get_user_posts(token: str = Depends(JwtBearer())):
 
 
 @router.put("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
-async def update_post(post_id: int, updated_post: PostSchema, token: str = Depends(JwtBearer())):
+async def update_post(
+    post_id: int,
+    updated_post: PostSchema,
+    token: str = Depends(JwtBearer()),
+    index_resource: IndexResource = Depends(IndexResource)
+):
     '''Updating Post (PUT)'''
 
     # Retrieve the authenticated user
@@ -112,11 +129,17 @@ async def update_post(post_id: int, updated_post: PostSchema, token: str = Depen
 
         await session.commit()
 
+        post_document = {"title": existing_post.title, "description": existing_post.description}
+
+        index_resource.search.update_document(index_name='posts', document=post_document, id=existing_post.id)
+
     return {"message": "Post updated successfully"}
 
 
 @router.delete("/posts/{post_id}", dependencies=[Depends(JwtBearer())])
-async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
+async def delete_post(
+    post_id: int, token: str = Depends(JwtBearer()), index_resource: IndexResource = Depends(IndexResource)
+):
     '''Deleting Post (DELETE)'''
 
     # Retrieve the authenticated user
@@ -133,8 +156,11 @@ async def delete_post(post_id: int, token: str = Depends(JwtBearer())):
         if post.author_id != user_obj.id:
             raise HTTPException(status_code=403, detail="Unauthorized to delete the post")
 
+        index_resource.search.delete_document(index_name='posts', id=post.id)
+
         await session.delete(post)
         await session.commit()
+
     return {"message": "Post deleted successfully"}
 
 
@@ -387,3 +413,23 @@ async def get_user_liked_posts(user_id: int):
             })
 
         return formatted_posts
+
+
+@router.get("/elasticsearch")
+async def elastic_search_posts(q: str, index_resource: IndexResource = Depends(IndexResource)):
+    '''Search posts by title or description (GET)'''
+
+    # Define the Elasticsearch search query
+    search_query = {"query": {"multi_match": {"query": q, "fields": ["title", "description"]}}}
+
+    # Search posts using Elasticsearch
+    try:
+        search_results = index_resource.search.get_data(index_name='posts', search_query=search_query, size=10)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error while querying Elasticsearch")
+
+    formatted_posts = []
+    for hit in search_results['hits']['hits']:
+        formatted_posts.append(hit['_source'])
+
+    return formatted_posts

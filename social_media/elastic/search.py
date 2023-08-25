@@ -15,3 +15,11 @@ class Search:
 
     def update_document(self, index_name, document, id) -> Any:
         return self.client.update(index=index_name, id=id, body={"doc": document})
+
+    def get_data(self, index_name, search_query, size=10):
+        try:
+            result = self.client.search(index=index_name, body=search_query, size=size)
+            return result
+        except Exception as e:
+            print("Error:", e)
+            raise e
