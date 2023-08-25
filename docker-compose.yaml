@@ -11,6 +11,12 @@ services:
     image: redis:7
     container_name: redis_social
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.1
+    container_name: elasticsearch_social
+    environment:
+      - "discovery.type=single-node"
+
   fastapi:
     build:
       context: .
@@ -22,6 +28,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - elasticsearch
     ports:
       - 9999:8000
 
